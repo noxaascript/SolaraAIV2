@@ -1,3 +1,7 @@
+from core.brain_memory import learn_pattern, get_learned
+from core.workspace import auto_app
+from core.deploy import deploy_vercel
+
 from core.memory import (
     normalize,
     auto_learn,

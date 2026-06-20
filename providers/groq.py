@@ -2,17 +2,16 @@ import requests
 from config import API_KEYS
 from core.memory import get_memory
 
-def build_context(prompt):
+def build_context(user_input):
     name = get_memory("name")
     vibe = get_memory("vibe")
 
-    return f"""
-Memory:
-name: {name}
-vibe: {vibe}
+    memory_text = ""
 
-user: {prompt}
-"""
+    if name or vibe:
+        memory_text = f"Memory:\nname={name}\nvibe={vibe}\n"
+
+    return memory_text + f"User: {user_input}"
 
 def ask_groq(prompt):
     url = "https://api.groq.com/openai/v1/chat/completions"
@@ -34,9 +33,9 @@ def ask_groq(prompt):
         result = res.json()
 
         if "choices" not in result:
-            return f"Groq Error: {result}"
+            return f"Error: {result}"
 
         return result["choices"][0]["message"]["content"]
 
     except Exception as e:
-        return f"Error: {str(e)}"
+        return f"Request Error: {e}"

@@ -1,30 +1,101 @@
 import json
 import os
+import time
 
 FILE = "memory.json"
 
 
-def load():
+# =========================
+# LOAD MEMORY DATABASE
+# =========================
+def load_memory():
+
     if not os.path.exists(FILE):
         return {}
-    return json.load(open(FILE))
+
+    try:
+        with open(FILE, "r") as f:
+            return json.load(f)
+    except:
+        return {}
 
 
-def save(data):
+# =========================
+# SAVE MEMORY DATABASE
+# =========================
+def save_memory_db(data):
+
     with open(FILE, "w") as f:
         json.dump(data, f, indent=2)
 
 
-def save_memory(user_id, prompt, result):
+# =========================
+# ADD MEMORY (USER CONTEXT)
+# =========================
+def add_memory(user_id, prompt, result):
 
-    data = load()
+    db = load_memory()
 
-    if user_id not in data:
-        data[user_id] = []
+    if user_id not in db:
+        db[user_id] = []
 
-    data[user_id].append({
+    db[user_id].append({
+        "timestamp": time.time(),
         "prompt": prompt,
         "result": str(result)
     })
 
-    save(data)
+    # limit memory biar gak berat
+    if len(db[user_id]) > 50:
+        db[user_id] = db[user_id][-50:]
+
+    save_memory_db(db)
+
+
+# =========================
+# GET USER MEMORY
+# =========================
+def get_memory(user_id):
+
+    db = load_memory()
+    return db.get(user_id, [])
+
+
+# =========================
+# GET CONTEXT STRING (FOR AI)
+# =========================
+def get_context(user_id, limit=5):
+
+    memory = get_memory(user_id)
+
+    if not memory:
+        return "No previous memory."
+
+    recent = memory[-limit:]
+
+    context = ""
+
+    for item in recent:
+        context += f"""
+User: {item['prompt']}
+AI: {item['result']}
+"""
+
+    return context.strip()
+
+
+# =========================
+# CLEAR MEMORY (OPTIONAL TOOL)
+# =========================
+def clear_memory(user_id=None):
+
+    db = load_memory()
+
+    if user_id:
+        db[user_id] = []
+    else:
+        db = {}
+
+    save_memory_db(db)
+
+    return "Memory cleared"

@@ -1,5 +1,6 @@
 from core.router import route
 from core.memory import save_chat, init_db
+
 import time
 
 init_db()
@@ -13,7 +14,7 @@ def stream(text):
 
 
 def chat_loop():
-    print("SolaraAI Hybrid Core 🔥")
+    print("SolaraAI Workspace Mode 🔥")
 
     while True:
         user = input("you> ")

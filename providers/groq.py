@@ -1,30 +1,31 @@
+import os
 import requests
-from config import API_KEYS
 
-def ask_groq(model_name, prompt):
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+
+def ask_groq(model, prompt):
+    if not GROQ_API_KEY:
+        return "GROQ_API_KEY not set"
 
     url = "https://api.groq.com/openai/v1/chat/completions"
 
     headers = {
-        "Authorization": f"Bearer {API_KEYS['groq']}",
+        "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json"
     }
 
-    data = {
-        "model": model_name,
+    payload = {
+        "model": model,
         "messages": [
             {"role": "user", "content": prompt}
-        ]
+        ],
+        "temperature": 0.7
     }
 
-    try:
-        res = requests.post(url, headers=headers, json=data)
-        r = res.json()
+    res = requests.post(url, json=payload, headers=headers)
 
-        if "choices" not in r:
-            return f"Groq Error: {r}"
+    if res.status_code != 200:
+        return f"Groq error: {res.text}"
 
-        return r["choices"][0]["message"]["content"]
-
-    except Exception as e:
-        return f"Groq Exception: {e}"
+    return res.json()["choices"][0]["message"]["content"]

@@ -9,5 +9,6 @@ pkg update && pkg upgrade -y
 pkg install python
 pkg install python-pip
 pip install flask requests beautifulsoup4
+pip install python-dotenv
 chmod +x start.sh
 bash start.sh

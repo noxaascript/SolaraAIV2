@@ -1,56 +1,137 @@
 import requests
 import os
-from core.workspace import create_workspace, add_file
-from core.website_pipeline import create_web_project
 
 
 # =========================
-# WEB FETCH TOOL (BASIC BROWSER)
+# MAIN TOOL ENTRY
 # =========================
-def fetch_url(url):
+def run_tool(name, *args):
+
+    # =========================
+    # WEB FETCH TOOL (RAW)
+    # =========================
+    if name == "fetch":
+        url = args[0] if args else None
+        return fetch(url)
+
+    # =========================
+    # CLEAN WEB SCRAPE TOOL
+    # =========================
+    if name == "fetch_clean":
+        url = args[0] if args else None
+        return fetch_clean(url)
+
+    # =========================
+    # WORKSPACE TOOL
+    # =========================
+    if name == "ws_create":
+        return workspace_create(*args)
+
+    # =========================
+    # WEB GENERATOR TOOL
+    # =========================
+    if name == "web_create":
+        return web_create(*args)
+
+    return f"Unknown tool: {name}"
+
+
+# =========================
+# RAW FETCH (BROWSER BASIC)
+# =========================
+def fetch(url):
+
+    if not url:
+        return "No URL provided"
+
     try:
-        r = requests.get(url, timeout=10)
-        return r.text[:3000]  # limit biar gak overload
+        headers = {"User-Agent": "Mozilla/5.0"}
+
+        r = requests.get(url, headers=headers, timeout=10)
+
+        return r.text[:3000]
+
     except Exception as e:
-        return f"Fetch error: {str(e)}"
+        return f"fetch error: {str(e)}"
 
 
 # =========================
-# WORKSPACE TOOL
+# CLEAN FETCH (TEXT ONLY BROWSER)
 # =========================
-def tool_workspace_create(name):
-    return create_workspace(name)
+def fetch_clean(url):
 
+    if not url:
+        return "No URL provided"
 
-def tool_workspace_add(ws, file, content):
-    return add_file(ws, file, content)
+    try:
+        from bs4 import BeautifulSoup
+
+        headers = {"User-Agent": "Mozilla/5.0"}
+
+        r = requests.get(url, headers=headers, timeout=10)
+
+        soup = BeautifulSoup(r.text, "html.parser")
+
+        for tag in soup(["script", "style", "noscript"]):
+            tag.decompose()
+
+        text = soup.get_text(separator="\n")
+
+        lines = [line.strip() for line in text.splitlines()]
+        clean = "\n".join([l for l in lines if l])
+
+        return clean[:4000]
+
+    except Exception as e:
+        return f"browser error: {str(e)}"
 
 
 # =========================
-# WEB GENERATOR TOOL
+# WORKSPACE CREATOR
 # =========================
-def tool_create_web(name, prompt):
-    return create_web_project(name, prompt)
+def workspace_create(name="project"):
+
+    try:
+        os.makedirs(name, exist_ok=True)
+
+        main_file = os.path.join(name, "main.py")
+
+        with open(main_file, "w") as f:
+            f.write("# auto generated workspace\nprint('hello world')\n")
+
+        return f"Workspace created: {name}"
+
+    except Exception as e:
+        return f"workspace error: {str(e)}"
 
 
 # =========================
-# TOOL ROUTER (MAIN ENTRY)
+# WEB PROJECT GENERATOR
 # =========================
-def run_tool(tool_name, *args):
+def web_create(name, prompt=""):
 
-    # ================= WEB =================
-    if tool_name == "fetch":
-        return fetch_url(*args)
+    try:
+        os.makedirs(name, exist_ok=True)
 
-    # ================= WORKSPACE =================
-    if tool_name == "ws_create":
-        return tool_workspace_create(*args)
+        html_file = os.path.join(name, "index.html")
 
-    if tool_name == "ws_add":
-        return tool_workspace_add(*args)
+        html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{name}</title>
+</head>
+<body>
+    <h1>Auto Generated Site</h1>
+    <p>{prompt}</p>
+</body>
+</html>
+"""
 
-    # ================= WEB AI =================
-    if tool_name == "web_create":
-        return tool_create_web(*args)
+        with open(html_file, "w") as f:
+            f.write(html_content)
 
-    return f"Unknown tool: {tool_name}"
+        return f"Web project created: {name}"
+
+    except Exception as e:
+        return f"web error: {str(e)}"

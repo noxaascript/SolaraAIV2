@@ -1,37 +1,22 @@
-API_KEYS = {
-    "groq": "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",
-    "hf": "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"
-}
+GROQ_API_KEY = "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"
 
-# =========================
-# MODEL REGISTRY (HYBRID)
-# =========================
 MODELS = {
     "1": {
-        "provider": "groq",
-        "name": "llama-3.3-70b-versatile",
-        "desc": "Best quality (Groq)"
+        "name": "llama-3.1-8b-instant",
+        "provider": "groq"
     },
     "2": {
-        "provider": "groq",
-        "name": "llama-3.1-8b-instant",
-        "desc": "Fast response (Groq)"
+        "name": "llama-3.3-70b-versatile",
+        "provider": "groq"
     },
     "3": {
-        "provider": "groq",
-        "name": "mixtral-8x7b-32768",
-        "desc": "Long context (Groq)"
-    },
-    "4": {
-        "provider": "hf",
-        "name": "meta-llama/Llama-3-8b-instruct",
-        "desc": "HF fallback model"
-    },
-    "5": {
-        "provider": "hf",
-        "name": "mistralai/Mistral-7B-Instruct-v0.3",
-        "desc": "HF creative model"
+        "name": "qwen/qwen3-32b",
+        "provider": "hf"
     }
 }
 
-CURRENT_MODEL = "1"
+MODEL_ROLES = {
+    "fast": "1",
+    "reasoning": "2",
+    "coding": "3"
+}

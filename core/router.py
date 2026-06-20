@@ -1,10 +1,12 @@
 from core.memory import (
-    auto_learn,
     normalize,
-    build_memory_context
+    auto_learn,
+    build_memory_context,
+    get_memory
 )
 
 from core.commands import run_tool
+from core.personality import get_personality
 
 from core.model_manager import get_model
 
@@ -14,53 +16,54 @@ from providers.hf import ask_hf
 
 def route(user_input):
 
-    # =========================
-    # NORMALIZE TEXT
-    # =========================
     clean_input = normalize(user_input)
 
 
-    # =========================
-    # AUTO LEARN MEMORY
-    # =========================
+    # AUTO MEMORY
     learned = auto_learn(clean_input)
 
     if learned:
         return learned
 
 
-    # =========================
-    # COMMAND SYSTEM
-    # =========================
+    # COMMAND
     if clean_input.startswith("/"):
         result = run_tool(clean_input)
 
         if result is None:
-            return "Unknown command ❌"
+            return "Unknown command"
 
         return result
 
 
-    # =========================
-    # BUILD AI CONTEXT
-    # =========================
-    memory_context = build_memory_context()
+    # MEMORY CONTEXT
+    memory = build_memory_context()
 
+
+    # PERSONALITY
+    mode = get_memory("personality")
+
+    if not mode:
+        mode = "normal"
+
+    personality = get_personality(mode)
+
+
+    # FINAL PROMPT
     prompt = f"""
-You are SolaraAI, a powerful AI assistant.
+{personality}
 
-{memory_context}
+User profile:
+{memory}
 
 User message:
 {user_input}
 
-Answer naturally.
+Answer based on your personality mode.
 """
 
 
-    # =========================
     # MODEL ROUTER
-    # =========================
     model = get_model()
 
 
@@ -78,4 +81,4 @@ Answer naturally.
         )
 
 
-    return "Error: Invalid AI provider"
+    return "Invalid AI provider"

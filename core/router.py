@@ -1,9 +1,9 @@
 from core.commands import run_tool
-from providers.smart_router import auto_chat
+from core.autonomous_agent import autonomous_agent
 
 
 # =========================
-# MAIN ROUTER
+# MAIN ROUTER ENTRY
 # =========================
 def route(user_input, user_id="default"):
 
@@ -13,16 +13,16 @@ def route(user_input, user_id="default"):
     if user_input.startswith("/"):
         result = run_tool(user_input, user_id)
 
-        # command valid
         if result is not None:
             return result
 
         return "Unknown command. type /help"
 
     # =========================
-    # AI MODE (SELF-IMPROVING)
+    # AUTONOMOUS AI MODE 🤖
     # =========================
     try:
-        return auto_chat(user_input, user_id)
+        return autonomous_agent(user_input, user_id)
+
     except Exception as e:
         return f"Router error: {str(e)}"

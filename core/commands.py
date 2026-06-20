@@ -1,6 +1,8 @@
 from core.memory import (
     get_all_memory,
-    delete_memory
+    delete_memory,
+    set_memory,
+    get_memory
 )
 
 from core.model_manager import (
@@ -9,45 +11,50 @@ from core.model_manager import (
     set_model
 )
 
+from core.personality import (
+    get_modes
+)
+
 
 def run_tool(user_input):
-    cmd = user_input.strip()
+    cmd = user_input.strip().lower()
 
-    # =========================
+
     # HELP
-    # =========================
-
     if cmd == "/help":
         return """
 Commands:
 
 Memory:
-/memory - show all memories
-/forget <key> - delete memory
+ /memory
+ /forget <key>
 
-AI:
-/model - current model
-/models - list models
-/setmodel <id> - change model
+Model:
+ /model
+ /models
+ /setmodel <id>
+
+Personality:
+ /mode
+ /modes
+ /setmode <name>
 
 System:
-/ping
-/version
+ /ping
+ /version
 """
 
-    # =========================
-    # MEMORY COMMANDS
-    # =========================
 
+    # MEMORY
     if cmd == "/memory":
-        memories = get_all_memory()
+        data = get_all_memory()
 
-        if not memories:
+        if not data:
             return "Memory is empty"
 
-        result = "🧠 Solara Memory:\n"
+        result = "Solara Memory:\n"
 
-        for key, value in memories:
+        for key, value in data:
             result += f"- {key}: {value}\n"
 
         return result
@@ -59,17 +66,11 @@ System:
         if len(parts) < 2:
             return "Usage: /forget <key>"
 
-        key = parts[1]
-
-        delete_memory(key)
-
-        return f"Forgot memory: {key}"
+        delete_memory(parts[1])
+        return f"Forgot {parts[1]}"
 
 
-    # =========================
-    # MODEL COMMANDS
-    # =========================
-
+    # MODEL
     if cmd == "/model":
         model = get_model()
 
@@ -81,11 +82,9 @@ System:
 
 
     if cmd == "/models":
-        models = list_models()
-
         result = "Available models:\n"
 
-        for key, value in models.items():
+        for key, value in list_models().items():
             result += (
                 f"{key}. {value['name']} "
                 f"({value['provider']})\n"
@@ -98,15 +97,47 @@ System:
         parts = cmd.split()
 
         if len(parts) < 2:
-            return "Usage: /setmodel 1, 2, 3..."
+            return "Usage: /setmodel <id>"
 
         return set_model(parts[1])
 
 
-    # =========================
-    # SYSTEM
-    # =========================
+    # PERSONALITY
+    if cmd == "/mode":
+        mode = get_memory("personality")
 
+        if not mode:
+            mode = "normal"
+
+        return f"Current mode: {mode}"
+
+
+    if cmd == "/modes":
+        result = "Available modes:\n"
+
+        for mode in get_modes():
+            result += f"- {mode}\n"
+
+        return result
+
+
+    if cmd.startswith("/setmode"):
+        parts = cmd.split()
+
+        if len(parts) < 2:
+            return "Usage: /setmode <mode>"
+
+        mode = parts[1]
+
+        if mode not in get_modes():
+            return "Invalid mode. Use /modes"
+
+        set_memory("personality", mode)
+
+        return f"Mode changed to {mode}"
+
+
+    # SYSTEM
     if cmd == "/ping":
         return "pong 🟢"
 
@@ -115,5 +146,4 @@ System:
         return "SolaraAI V2"
 
 
-    # Unknown command
     return None

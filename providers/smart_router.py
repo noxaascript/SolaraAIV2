@@ -1,51 +1,67 @@
+import time
 from providers.groq import ask_groq
 from providers.qwen import ask_qwen
 from providers.llama import ask_llama
-from config import GROQ_API_KEY, HF_API_KEY
+from core.model_memory import get_scores, update_score
+
+
+MODELS = {
+    "groq": lambda prompt: ask_groq("llama3-8b-8192", prompt),
+    "qwen": lambda prompt: ask_qwen("Qwen/Qwen2.5-7B-Instruct", prompt),
+    "llama": lambda prompt: ask_llama("meta-llama/Llama-3-8B-Instruct", prompt)
+}
 
 
 # =========================
-# SIMPLE INTENT CLASSIFIER
+# PICK BEST MODEL (LEARNING)
 # =========================
-def pick_model(prompt):
+def pick_model(user_id, prompt):
 
-    p = prompt.lower()
+    scores = get_scores(user_id)
 
-    # fast & general Q&A → Groq
-    if len(p) < 200:
-        return "groq"
+    # default score kalau belum ada data
+    def score(m):
+        return scores.get(m, 1)
 
-    # coding / reasoning → LLaMA
-    if "code" in p or "python" in p or "bug" in p:
-        return "llama"
+    # pilih skor tertinggi
+    best = max(MODELS.keys(), key=score)
 
-    # heavy reasoning / long text → Qwen
-    if len(p) > 300:
-        return "qwen"
-
-    return "groq"
+    return best
 
 
 # =========================
-# MAIN AUTO ROUTER
+# AUTO CHAT + LEARNING
 # =========================
-def auto_chat(prompt):
+def auto_chat(prompt, user_id="default"):
 
-    provider = pick_model(prompt)
+    model = pick_model(user_id, prompt)
 
-    # ================= GROQ =================
-    if provider == "groq":
-        model = "llama3-8b-8192"
-        return ask_groq(model, prompt)
+    start = time.time()
 
-    # ================= LLAMA =================
-    if provider == "llama":
-        model = "meta-llama/Llama-3-8B-Instruct"
-        return ask_llama(model, prompt)
+    try:
+        result = MODELS[model](prompt)
 
-    # ================= QWEN =================
-    if provider == "qwen":
-        model = "Qwen/Qwen2.5-7B-Instruct"
-        return ask_qwen(model, prompt)
+        latency = time.time() - start
 
-    return "No provider selected"
+        # =========================
+        # SCORE SYSTEM
+        # =========================
+        score = 1.0
+
+        # cepat = bagus
+        if latency < 2:
+            score += 1.0
+        elif latency > 6:
+            score -= 0.5
+
+        # error detection
+        if "error" in str(result).lower():
+            score -= 1.5
+
+        update_score(user_id, model, score)
+
+        return result
+
+    except Exception as e:
+        update_score(user_id, model, -2)
+        return f"AI error: {str(e)}"

@@ -4,10 +4,6 @@ current = CURRENT_MODEL
 
 
 def get_model():
-    return MODELS[current]["name"]
-
-
-def get_model_info():
     return MODELS[current]
 
 
@@ -16,9 +12,10 @@ def set_model(key):
 
     if key in MODELS:
         current = key
-        return f"model switched → {key} ({MODELS[key]['name']})"
+        m = MODELS[key]
+        return f"model switched → {key} ({m['provider']}:{m['name']})"
 
-    return "invalid model (use 1/2/3)"
+    return "invalid model id"
 
 
 def list_models():

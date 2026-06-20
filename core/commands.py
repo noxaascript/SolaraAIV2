@@ -1,73 +1,62 @@
 from core.model_manager import set_model, list_models, get_model
-from core.memory import set_memory, get_memory
-import os
-import subprocess
 
-def handle_command(text):
-    if not text.startswith("/"):
-        return None
 
-    parts = text.strip().split()
-    cmd = parts[0].lower()
+def run_tool(user_input):
+    cmd = user_input.strip().lower()
 
-    # 📖 help
+    # ======================
+    # HELP
+    # ======================
     if cmd == "/help":
-        return """
-/help
-/model
-/models
-/setmodel <name>
-/remember <key> <value>
-/recall <key>
-/ls
-/pwd
-/run <command>
-/exit
-"""
+        return get_help()
 
-    # 🤖 model info
+    # ======================
+    # PING
+    # ======================
+    if cmd == "/ping":
+        return "pong 🟢"
+
+    # ======================
+    # VERSION
+    # ======================
+    if cmd == "/version":
+        return "SolaraAI v1.0"
+
+    # ======================
+    # MODEL SYSTEM
+    # ======================
     if cmd == "/model":
-        return get_model()
+        m = get_model()
+        return f"current model → {m['name']} ({m['provider']})"
 
     if cmd == "/models":
-        return ", ".join(list_models())
+        models = list_models()
 
-    if cmd == "/setmodel":
+        result = "available models:\n"
+        for k, v in models.items():
+            result += f"{k}: {v['name']} ({v['provider']})\n"
+
+        return result
+
+    if cmd.startswith("/setmodel"):
+        parts = cmd.split()
+
         if len(parts) < 2:
-            return "usage: /setmodel groq"
+            return "usage: /setmodel 1|2|3"
+
         return set_model(parts[1])
 
-    # 🧠 memory save
-    if cmd == "/remember":
-        if len(parts) < 3:
-            return "usage: /remember name krm"
-        key = parts[1]
-        value = " ".join(parts[2:])
-        set_memory(key, value)
-        return f"saved {key}"
+    return None
 
-    # 🧠 memory recall
-    if cmd == "/recall":
-        if len(parts) < 2:
-            return "usage: /recall name"
-        return get_memory(parts[1]) or "not found"
 
-    # 📂 list file
-    if cmd == "/ls":
-        return os.popen("ls").read()
+def get_help():
+    return """
+commands:
+/help - show help
+/ping - test bot
+/version - show version
 
-    # 📍 path
-    if cmd == "/pwd":
-        return os.popen("pwd").read()
-
-    # ⚡ run shell
-    if cmd == "/run":
-        if len(parts) < 2:
-            return "usage: /run ls"
-        return subprocess.getoutput(" ".join(parts[1:]))
-
-    # 🚪 exit
-    if cmd == "/exit":
-        return "exit"
-
-    return "unknown command"
+/model - show current model
+/models - list models
+/setmodel <id> - change model
+"""

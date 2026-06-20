@@ -1,62 +1,119 @@
-from core.model_manager import set_model, list_models, get_model
+from core.memory import (
+    get_all_memory,
+    delete_memory
+)
+
+from core.model_manager import (
+    get_model,
+    list_models,
+    set_model
+)
 
 
 def run_tool(user_input):
-    cmd = user_input.strip().lower()
+    cmd = user_input.strip()
 
-    # ======================
+    # =========================
     # HELP
-    # ======================
+    # =========================
+
     if cmd == "/help":
-        return get_help()
+        return """
+Commands:
 
-    # ======================
-    # PING
-    # ======================
-    if cmd == "/ping":
-        return "pong 🟢"
+Memory:
+/memory - show all memories
+/forget <key> - delete memory
 
-    # ======================
-    # VERSION
-    # ======================
-    if cmd == "/version":
-        return "SolaraAI v1.0"
+AI:
+/model - current model
+/models - list models
+/setmodel <id> - change model
 
-    # ======================
-    # MODEL SYSTEM
-    # ======================
+System:
+/ping
+/version
+"""
+
+    # =========================
+    # MEMORY COMMANDS
+    # =========================
+
+    if cmd == "/memory":
+        memories = get_all_memory()
+
+        if not memories:
+            return "Memory is empty"
+
+        result = "🧠 Solara Memory:\n"
+
+        for key, value in memories:
+            result += f"- {key}: {value}\n"
+
+        return result
+
+
+    if cmd.startswith("/forget"):
+        parts = cmd.split()
+
+        if len(parts) < 2:
+            return "Usage: /forget <key>"
+
+        key = parts[1]
+
+        delete_memory(key)
+
+        return f"Forgot memory: {key}"
+
+
+    # =========================
+    # MODEL COMMANDS
+    # =========================
+
     if cmd == "/model":
-        m = get_model()
-        return f"current model → {m['name']} ({m['provider']})"
+        model = get_model()
+
+        return (
+            f"Current model:\n"
+            f"{model['name']}\n"
+            f"Provider: {model['provider']}"
+        )
+
 
     if cmd == "/models":
         models = list_models()
 
-        result = "available models:\n"
-        for k, v in models.items():
-            result += f"{k}: {v['name']} ({v['provider']})\n"
+        result = "Available models:\n"
+
+        for key, value in models.items():
+            result += (
+                f"{key}. {value['name']} "
+                f"({value['provider']})\n"
+            )
 
         return result
+
 
     if cmd.startswith("/setmodel"):
         parts = cmd.split()
 
         if len(parts) < 2:
-            return "usage: /setmodel 1|2|3"
+            return "Usage: /setmodel 1, 2, 3..."
 
         return set_model(parts[1])
 
+
+    # =========================
+    # SYSTEM
+    # =========================
+
+    if cmd == "/ping":
+        return "pong 🟢"
+
+
+    if cmd == "/version":
+        return "SolaraAI V2"
+
+
+    # Unknown command
     return None
-
-
-def get_help():
-    return """
-commands:
-/help - show help
-/ping - test bot
-/version - show version
-
-/model - show current model
-/models - list models
-/setmodel <id> - change model
-"""

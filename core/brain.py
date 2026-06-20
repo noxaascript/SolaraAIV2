@@ -1,24 +1,32 @@
-import random
+def choose_model(message):
+    text = message.lower()
 
-PERSONA = {
-    "name": "Solara",
-    "mode": "Jarvis",
-    "style": "calm, precise, slightly witty"
-}
-
-def system_prompt(user):
-    vibes = [
-        "ready",
-        "online",
-        "listening",
-        "active"
+    coding_words = [
+        "code", "coding", "program", "python", "javascript",
+        "html", "css", "bug", "error", "website", "api",
+        "database", "sql", "app", "function", "script"
     ]
 
-    return f"""
-You are {PERSONA['name']} in Jarvis Mode.
-Status: {random.choice(vibes)}
-Style: {PERSONA['style']}
+    reasoning_words = [
+        "explain", "why", "how", "compare", "analysis",
+        "think", "strategy", "science", "math", "theory",
+        "concept", "meaning", "difference"
+    ]
 
-User: {user}
-Respond naturally, concise, intelligent.
-"""
+    chat_words = [
+        "hi", "hello", "halo", "hey", "sup", "apa kabar"
+    ]
+
+    for w in coding_words:
+        if w in text:
+            return "coding"
+
+    for w in reasoning_words:
+        if w in text:
+            return "reasoning"
+
+    for w in chat_words:
+        if w in text:
+            return "fast"
+
+    return "fast"

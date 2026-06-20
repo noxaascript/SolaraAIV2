@@ -12,3 +12,4 @@ pip install flask requests beautifulsoup4
 pip install python-dotenv
 chmod +x start.sh
 bash start.sh
+Also, there is no api key lefted, make your own

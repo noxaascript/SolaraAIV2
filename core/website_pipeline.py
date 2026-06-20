@@ -1,28 +1,32 @@
 from core.web_generator import generate_website
-from core.website_memory import save_project
+from core.web_memory import save_web_project
 from core.deploy_system import (
     deploy_vercel,
     deploy_flask,
     deploy_infinityfree
 )
-from core.web_memory import save_web_project
 
 
 def create_website_project(name, prompt):
+    # 1. generate file website
     files = generate_website(name, prompt)
 
-    save_project(name, prompt, files)
+    # 2. simpan ke WebMemory
+    save_web_project(
+        name=name,
+        prompt=prompt,
+        files=files,
+        platform="auto"
+    )
 
     return {
+        "status": "success",
         "name": name,
-        "files": files,
-        "status": "created"
+        "files": list(files.keys())
     }
 
 
 def deploy_project(name, platform):
-    import os
-
     path = f"workspaces/{name}"
 
     if platform == "vercel":

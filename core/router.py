@@ -1,9 +1,8 @@
 from core.commands import run_tool
 
-# OPTIONAL: kalau kamu sudah punya model AI
+# OPTIONAL MODEL IMPORT (aman kalau belum ada provider)
 try:
     from providers.groq import ask_groq
-    from config import MODELS, MODEL_ROLES
 except:
     ask_groq = None
 
@@ -17,24 +16,20 @@ def route(user_input):
         return run_tool(user_input)
 
     # =====================
-    # AI RESPONSE (REAL)
+    # AI BRAIN SYSTEM
     # =====================
     if ask_groq:
-        prompt = f"""
-You are SolaraAI.
-
-User message:
-{user_input}
-
-Respond naturally and helpful.
-"""
-
         try:
+            prompt = f"""You are SolaraAI, a helpful assistant.
+
+User: {user_input}
+Answer clearly and naturally.
+"""
             return ask_groq("llama3-8b-8192", prompt)
-        except:
-            return "AI error (model call failed)"
+        except Exception as e:
+            return f"AI error: {str(e)}"
 
     # =====================
-    # FALLBACK
+    # FALLBACK (NO MODEL)
     # =====================
-    return "No AI model connected"
+    return "AI belum connect ke model (cek providers/groq.py)"

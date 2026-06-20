@@ -1,19 +1,21 @@
 import os
 import requests
-from dotenv import load_dotenv
 
-load_dotenv()
-
+# try env first
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+# fallback ke config.py kalau env kosong
+if not GROQ_API_KEY:
+    try:
+        from config import GROQ_API_KEY
+    except:
+        GROQ_API_KEY = None
 
 
 def ask_groq(model, prompt):
 
     if not GROQ_API_KEY:
-        return (
-            "❌ GROQ_API_KEY tidak ditemukan.\n"
-            "Set di .env atau export di Termux."
-        )
+        return "No API key found (env or config)"
 
     url = "https://api.groq.com/openai/v1/chat/completions"
 
@@ -24,19 +26,17 @@ def ask_groq(model, prompt):
 
     payload = {
         "model": model,
-        "messages": [
-            {"role": "user", "content": prompt}
-        ],
+        "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.7
     }
 
     try:
-        res = requests.post(url, json=payload, headers=headers, timeout=30)
+        res = requests.post(url, json=payload, headers=headers)
 
         if res.status_code != 200:
-            return f"Groq error: {res.text}"
+            return f"Error: {res.text}"
 
         return res.json()["choices"][0]["message"]["content"]
 
     except Exception as e:
-        return f"Request failed: {str(e)}"
+        return str(e)

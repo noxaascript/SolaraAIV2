@@ -1,36 +1,56 @@
-from core.browser import fetch_url
-
-TOOLS = {}
-
-
-def register_tool(name, func):
-    TOOLS[name] = func
-
-
-def run_tool(name, *args):
-    if name not in TOOLS:
-        return "Tool not found"
-
-    return TOOLS[name](*args)
-
-
-def list_tools():
-    return list(TOOLS.keys())
+import requests
+import os
+from core.workspace import create_workspace, add_file
+from core.website_pipeline import create_web_project
 
 
 # =========================
-# DEFAULT TOOL REGISTRATION
+# WEB FETCH TOOL (BASIC BROWSER)
 # =========================
+def fetch_url(url):
+    try:
+        r = requests.get(url, timeout=10)
+        return r.text[:3000]  # limit biar gak overload
+    except Exception as e:
+        return f"Fetch error: {str(e)}"
 
-register_tool("browser", fetch_url)
+
+# =========================
+# WORKSPACE TOOL
+# =========================
+def tool_workspace_create(name):
+    return create_workspace(name)
 
 
-# optional chrome bridge (kalau sudah ada chrome_bridge.py)
-try:
-    from core.chrome_bridge import send_to_chrome
+def tool_workspace_add(ws, file, content):
+    return add_file(ws, file, content)
 
-    register_tool("chrome_open", lambda url: send_to_chrome("open", url))
-    register_tool("chrome_tabs", lambda: send_to_chrome("tabs"))
 
-except:
-    pass
+# =========================
+# WEB GENERATOR TOOL
+# =========================
+def tool_create_web(name, prompt):
+    return create_web_project(name, prompt)
+
+
+# =========================
+# TOOL ROUTER (MAIN ENTRY)
+# =========================
+def run_tool(tool_name, *args):
+
+    # ================= WEB =================
+    if tool_name == "fetch":
+        return fetch_url(*args)
+
+    # ================= WORKSPACE =================
+    if tool_name == "ws_create":
+        return tool_workspace_create(*args)
+
+    if tool_name == "ws_add":
+        return tool_workspace_add(*args)
+
+    # ================= WEB AI =================
+    if tool_name == "web_create":
+        return tool_create_web(*args)
+
+    return f"Unknown tool: {tool_name}"

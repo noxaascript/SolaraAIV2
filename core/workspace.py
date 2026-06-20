@@ -1,75 +1,56 @@
 import os
 
-BASE_DIR = "workspaces"
+BASE = "workspaces"
 
 
 def ensure():
-    os.makedirs(BASE_DIR, exist_ok=True)
+    os.makedirs(BASE, exist_ok=True)
 
 
 def create_workspace(name):
     ensure()
-    path = os.path.join(BASE_DIR, name)
+    path = os.path.join(BASE, name)
 
     if os.path.exists(path):
-        return "Workspace already exists"
+        return "exists"
 
     os.makedirs(path)
-    return f"Workspace created: {name}"
+    return f"workspace {name} created"
 
 
 def list_workspaces():
     ensure()
-    return os.listdir(BASE_DIR)
+    return os.listdir(BASE)
 
 
 def read_workspace(name):
-    path = os.path.join(BASE_DIR, name)
-
-    if not os.path.exists(path):
-        return "Workspace not found"
-
-    return os.listdir(path)
+    path = os.path.join(BASE, name)
+    return os.listdir(path) if os.path.exists(path) else "not found"
 
 
-def add_file(ws, file_name, content):
+def add_file(ws, file, content):
     ensure()
-
-    path = os.path.join(BASE_DIR, ws)
+    path = os.path.join(BASE, ws)
 
     if not os.path.exists(path):
-        return "Workspace not found"
+        return "not found"
 
-    with open(os.path.join(path, file_name), "w", encoding="utf-8") as f:
+    with open(os.path.join(path, file), "w") as f:
         f.write(content)
 
-    return "File created"
+    return "file added"
 
 
-# IMPORTANT: dipakai router
 def auto_app(name, prompt):
     ensure()
-
-    path = os.path.join(BASE_DIR, name)
+    path = os.path.join(BASE, name)
 
     if os.path.exists(path):
-        return "Workspace already exists"
+        return "exists"
 
-    os.makedirs(path, exist_ok=True)
-
-    html = f"""<!DOCTYPE html>
-<html>
-<head>
-<title>{name}</title>
-</head>
-<body>
-<h1>{name}</h1>
-<p>{prompt}</p>
-</body>
-</html>
-"""
+    os.makedirs(path)
 
     with open(os.path.join(path, "index.html"), "w") as f:
-        f.write(html)
+        f.write(f"<h1>{name}</h1><p>{prompt}</p>")
 
-    return f"APP CREATED: {name}"
+    return "app created"

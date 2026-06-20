@@ -2,9 +2,13 @@ from core.plugins import run_plugin
 from core.tools import run_tool
 from core.memory import auto_learn, get_memory, normalize
 
-from core.model_manager import get_model
-from providers.groq import ask_groq
-from providers.hf import ask_hf
+from core.project_manager import create_project, save_file
+from core.project_ai import generate_code
+
+
+def is_code_request(text):
+    keywords = ["buat", "create", "build", "kode", "program", "coding"]
+    return any(k in text.lower() for k in keywords)
 
 
 def route(user_input):
@@ -27,22 +31,23 @@ def route(user_input):
     if user_input.startswith("/"):
         return run_tool(user_input)
 
-    # 🤖 AI CORE
-    model = get_model()
+    # 💻 CODE WORKSPACE MODE
+    if is_code_request(user_input):
 
+        folder = create_project(user_input)
+        code = generate_code(user_input)
+
+        file_path = save_file(folder, "main.py", code)
+
+        return f"""project created 🚀
+folder: {folder}
+file: {file_path}"""
+
+    # 🤖 normal AI fallback
     name = get_memory("name")
-
     context = ""
+
     if name:
-        context += f"User name: {name}\n"
+        context = f"User name: {name}\n"
 
-    prompt = context + user_input
-
-    # 🔥 HYBRID ROUTING
-    if model["provider"] == "groq":
-        return ask_groq(model["name"], prompt)
-
-    if model["provider"] == "hf":
-        return ask_hf(model["name"], prompt)
-
-    return "invalid provider"
+    return context + user_input

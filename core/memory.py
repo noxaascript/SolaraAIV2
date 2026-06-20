@@ -15,11 +15,16 @@ def save(data):
         json.dump(data, f, indent=2)
 
 
-def get_memory(key):
-    return load().get(key)
+def save_memory(user_id, prompt, result):
 
-
-def set_memory(key, value):
     data = load()
-    data[key] = value
+
+    if user_id not in data:
+        data[user_id] = []
+
+    data[user_id].append({
+        "prompt": prompt,
+        "result": str(result)
+    })
+
     save(data)

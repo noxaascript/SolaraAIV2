@@ -3,9 +3,6 @@ import requests
 
 def ask_groq(api_key, model, prompt):
 
-    if not api_key:
-        return "No API key for this user"
-
     url = "https://api.groq.com/openai/v1/chat/completions"
 
     headers = {
@@ -15,9 +12,7 @@ def ask_groq(api_key, model, prompt):
 
     payload = {
         "model": model,
-        "messages": [
-            {"role": "user", "content": prompt}
-        ],
+        "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.7
     }
 

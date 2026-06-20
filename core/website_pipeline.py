@@ -1,41 +1,36 @@
+import os
+
 from core.web_generator import generate_website
-from core.web_memory import save_web_project
-from core.deploy_system import (
-    deploy_vercel,
-    deploy_flask,
-    deploy_infinityfree
-)
+from core.web_memory import save_web_project, save_to_main_file
 
 
-def create_website_project(name, prompt):
-    # 1. generate file website
+BASE_DIR = "workspaces"
+
+
+def ensure_ws():
+    os.makedirs(BASE_DIR, exist_ok=True)
+
+
+# =========================
+# CREATE WEB PROJECT (MAIN)
+# =========================
+def create_web_project(name, prompt):
+    ensure_ws()
+
     files = generate_website(name, prompt)
 
-    # 2. simpan ke WebMemory
-    save_web_project(
-        name=name,
-        prompt=prompt,
-        files=files,
-        platform="auto"
-    )
+    # simpan ke WebMemory (JSON)
+    save_web_project(name, prompt, files, platform="auto")
 
-    return {
-        "status": "success",
-        "name": name,
-        "files": list(files.keys())
-    }
+    # simpan ke log utama (web.txt)
+    msg = save_to_main_file(name, prompt, files)
 
+    # juga simpan ke workspace folder (biar bisa deploy)
+    path = os.path.join(BASE_DIR, name)
+    os.makedirs(path, exist_ok=True)
 
-def deploy_project(name, platform):
-    path = f"workspaces/{name}"
+    for file_name, content in files.items():
+        with open(os.path.join(path, file_name), "w", encoding="utf-8") as f:
+            f.write(content)
 
-    if platform == "vercel":
-        return deploy_vercel(path)
-
-    if platform == "flask":
-        return deploy_flask(name, {})
-
-    if platform == "infinityfree":
-        return deploy_infinityfree(path)
-
-    return "Invalid platform"
+    return msg

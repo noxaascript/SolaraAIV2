@@ -1,81 +1,72 @@
-from core.tools import run_tool
-from providers.smart_router import auto_chat
+from core.dev_agent import dev_autonomous
 
 
 # =========================
-# TOOL DECISION ENGINE
+# AUTONOMOUS AGENT CORE WRAPPER
 # =========================
-def decide_actions(prompt):
+class AutonomousAgent:
 
-    p = prompt.lower()
+    def __init__(self):
+        self.mode = "dev_autonomous"
+        self.last_task = None
+        self.last_result = None
 
-    actions = []
+    # -------------------------
+    # MAIN ENTRY
+    # -------------------------
+    def run(self, prompt, user_id="default"):
 
-    # WEB ACTION
-    if "http" in p or "buka web" in p or "cek link" in p:
-        actions.append(("fetch", extract_url(p)))
-
-    # WEB GENERATION
-    if "buat website" in p or "generate website" in p:
-        actions.append(("web_create", "site", prompt))
-
-    # WORKSPACE
-    if "project" in p or "app" in p:
-        actions.append(("ws_create", "auto_project"))
-
-    return actions
-
-
-def extract_url(text):
-    for w in text.split():
-        if "http" in w:
-            return w
-    return "https://example.com"
-
-
-# =========================
-# EXECUTOR
-# =========================
-def execute_actions(actions):
-
-    results = []
-
-    for action in actions:
-        tool = action[0]
-        args = action[1:]
+        self.last_task = prompt
 
         try:
-            result = run_tool(tool, *args)
-            results.append(result)
+            result = dev_autonomous(prompt, user_id)
+
+            self.last_result = result
+
+            return self.format_output(result)
+
         except Exception as e:
-            results.append(f"tool error: {str(e)}")
+            return self.handle_error(e)
 
-    return results
+    # -------------------------
+    # OUTPUT FORMATTER
+    # -------------------------
+    def format_output(self, result):
 
+        if result is None:
+            return "[AUTO] No result generated"
 
-# =========================
-# AUTONOMOUS AGENT CORE
-# =========================
-def autonomous_agent(prompt, user_id="default"):
+        return f"""🤖 AUTONOMOUS RESULT
 
-    # 1. decide tools
-    actions = decide_actions(prompt)
+{result}
 
-    # 2. kalau ada tool → eksekusi dulu
-    if actions:
-        tool_result = execute_actions(actions)
-
-        # 3. gabung hasil tool + AI reasoning
-        ai_prompt = f"""
-User request: {prompt}
-
-Tool results:
-{tool_result}
-
-Explain or continue task if needed.
+━━━━━━━━━━━━━━━━━━
+mode: {self.mode}
+status: completed
 """
 
-        return auto_chat(ai_prompt, user_id)
+    # -------------------------
+    # ERROR HANDLER
+    # -------------------------
+    def handle_error(self, error):
 
-    # 4. kalau gak ada tool → pure AI
-    return auto_chat(prompt, user_id)
+        return f"""❌ AUTONOMOUS ERROR
+
+error: {str(error)}
+
+system: {self.mode}
+status: failed
+"""
+
+
+# =========================
+# GLOBAL INSTANCE
+# =========================
+agent_instance = AutonomousAgent()
+
+
+# =========================
+# PUBLIC FUNCTION
+# =========================
+def autonomous_agent(prompt, user_id="default"):
+    return agent_instance.run(prompt, user_id)

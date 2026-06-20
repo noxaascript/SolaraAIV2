@@ -1,19 +1,8 @@
 import requests
 from config import API_KEYS
-from core.memory import get_memory
 
-def build_context(user_input):
-    name = get_memory("name")
-    vibe = get_memory("vibe")
+def ask_groq(model_name, prompt):
 
-    memory_text = ""
-
-    if name or vibe:
-        memory_text = f"Memory:\nname={name}\nvibe={vibe}\n"
-
-    return memory_text + f"User: {user_input}"
-
-def ask_groq(prompt):
     url = "https://api.groq.com/openai/v1/chat/completions"
 
     headers = {
@@ -22,20 +11,20 @@ def ask_groq(prompt):
     }
 
     data = {
-        "model": "llama-3.3-70b-versatile",
+        "model": model_name,
         "messages": [
-            {"role": "user", "content": build_context(prompt)}
+            {"role": "user", "content": prompt}
         ]
     }
 
     try:
         res = requests.post(url, headers=headers, json=data)
-        result = res.json()
+        r = res.json()
 
-        if "choices" not in result:
-            return f"Error: {result}"
+        if "choices" not in r:
+            return f"Groq Error: {r}"
 
-        return result["choices"][0]["message"]["content"]
+        return r["choices"][0]["message"]["content"]
 
     except Exception as e:
-        return f"Request Error: {e}"
+        return f"Groq Exception: {e}"

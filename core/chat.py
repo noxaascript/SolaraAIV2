@@ -1,42 +1,29 @@
-import time
-import sys
-from core.router import get_response
+from core.router import route
 from core.memory import save_chat
-from core.commands import handle_command
-from core.tools import run_tool
+from core.plugins import load_plugins
 
-def stream_text(text):
+import time, sys
+
+load_plugins()
+
+def stream(text):
     for c in text:
-        sys.stdout.write(c)
-        sys.stdout.flush()
+        print(c, end="", flush=True)
         time.sleep(0.005)
     print()
 
 def chat_loop():
-    print("SolaraAI Core Mode 🔥 /help")
+    print("SolaraAI Core v2 🔥")
 
     while True:
         user = input("you> ")
 
-        # 🧠 command system
-        cmd = handle_command(user)
-        if cmd:
-            if cmd == "exit":
-                break
-            print("solara>", cmd)
-            continue
+        if user == "/exit":
+            break
 
-        # ⚙️ tool system
-        tool_result = run_tool(user)
-        if tool_result:
-            print("solara> ", tool_result)
-            save_chat(user, tool_result)
-            continue
-
-        # 🤖 AI fallback
-        bot = get_response(user)
+        result = route(user)
 
         print("solara> ", end="")
-        stream_text(bot)
+        stream(str(result))
 
-        save_chat(user, bot)
+        save_chat(user, str(result))

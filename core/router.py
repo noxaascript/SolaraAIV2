@@ -5,11 +5,16 @@ from core.memory import (
     get_memory
 )
 
+from core.chat_memory import (
+    add_chat,
+    build_chat_context
+)
+
+from core.agent import agent_process
+
 from core.commands import run_tool
 from core.personality import get_personality
 from core.brain import choose_model
-
-from core.tools import run_tool as run_plugin
 
 from config import MODEL_ROLES, MODELS
 
@@ -19,16 +24,23 @@ from providers.hf import ask_hf
 
 def route(user_input):
 
-    # =========================
-    # NORMALIZE INPUT
-    # =========================
     clean_input = normalize(user_input)
 
 
     # =========================
-    # AUTO LEARN MEMORY
+    # AGENT MODE (AUTO TOOL)
+    # =========================
+    agent_result = agent_process(user_input)
+
+    if agent_result:
+        return agent_result
+
+
+    # =========================
+    # MEMORY LEARN
     # =========================
     learned = auto_learn(clean_input)
+
     if learned:
         return learned
 
@@ -37,45 +49,28 @@ def route(user_input):
     # COMMAND SYSTEM
     # =========================
     if clean_input.startswith("/"):
-        result = run_tool(clean_input)
-
-        if result is not None:
-            return result
-
-        return "Unknown command"
+        return run_tool(clean_input)
 
 
     # =========================
-    # TOOL SYSTEM (URL / BROWSER)
-    # =========================
-    if "http" in user_input:
-        return run_plugin("browser", user_input)
-
-
-    # =========================
-    # MEMORY CONTEXT
+    # CONTEXT BUILDING
     # =========================
     memory = build_memory_context()
+    chat = build_chat_context()
 
 
     # =========================
-    # PERSONALITY SYSTEM
+    # PERSONALITY
     # =========================
-    mode = get_memory("personality")
-
-    if not mode:
-        mode = "normal"
-
+    mode = get_memory("personality") or "normal"
     personality = get_personality(mode)
 
 
     # =========================
-    # BRAIN (AUTO MODEL SELECT)
+    # BRAIN MODEL SELECT
     # =========================
     role = choose_model(user_input)
-
     model_id = MODEL_ROLES.get(role, "1")
-
     model = MODELS[model_id]
 
 
@@ -88,21 +83,32 @@ def route(user_input):
 User profile:
 {memory}
 
+Conversation:
+{chat}
+
 User message:
 {user_input}
 
-Respond naturally, use context and personality.
+Respond naturally.
 """
 
 
     # =========================
-    # MODEL ROUTING
+    # AI CALL
     # =========================
     if model["provider"] == "groq":
-        return ask_groq(model["name"], prompt)
+        response = ask_groq(model["name"], prompt)
 
-    if model["provider"] == "hf":
-        return ask_hf(model["name"], prompt)
+    elif model["provider"] == "hf":
+        response = ask_hf(model["name"], prompt)
+
+    else:
+        response = "Invalid provider"
 
 
-    return "Invalid AI provider"
+    # =========================
+    # SAVE CHAT MEMORY
+    # =========================
+    add_chat(user_input, response)
+
+    return response

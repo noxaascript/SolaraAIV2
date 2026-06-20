@@ -1,24 +1,28 @@
-from core.commands import run_tool, MODELS
-from core.user_store import get_key
-from providers.groq import ask_groq
+from core.commands import run_tool
+from providers.smart_router import auto_chat
 
 
-def route(user_input, user_id="default", model_id="1"):
+# =========================
+# MAIN ROUTER
+# =========================
+def route(user_input, user_id="default"):
 
+    # =========================
     # COMMAND MODE
+    # =========================
     if user_input.startswith("/"):
-        return run_tool(user_input, user_id)
+        result = run_tool(user_input)
 
-    api_key = get_key(user_id)
+        # kalau command valid
+        if result is not None:
+            return result
 
-    if not api_key:
-        return "User has no API key. Use /setkey <key>"
+        return "Unknown command. type /help"
 
-    model = MODELS.get(model_id, MODELS["1"])
-
-    prompt = f"""
-User: {user_input}
-Answer naturally.
-"""
-
-    return ask_groq(api_key, model, prompt)
+    # =========================
+    # AI MODE (AUTO SWITCH)
+    # =========================
+    try:
+        return auto_chat(user_input)
+    except Exception as e:
+        return f"AI router error: {str(e)}"

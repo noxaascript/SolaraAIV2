@@ -1,22 +1,24 @@
-from core.commands import run_tool, MODELS, get_selected_model
-from core.memory import get_memory
+from core.commands import run_tool, MODELS
+from core.user_store import get_key
 from providers.groq import ask_groq
 
 
-def route(user_input):
+def route(user_input, user_id="default", model_id="1"):
 
     # COMMAND MODE
     if user_input.startswith("/"):
-        return run_tool(user_input)
+        return run_tool(user_input, user_id)
 
-    # AI MODE
-    mid = get_selected_model()
-    model = MODELS[mid]
+    api_key = get_key(user_id)
+
+    if not api_key:
+        return "User has no API key. Use /setkey <key>"
+
+    model = MODELS.get(model_id, MODELS["1"])
 
     prompt = f"""
-You are SolaraAI.
 User: {user_input}
-Answer clearly and naturally.
+Answer naturally.
 """
 
-    return ask_groq(model, prompt)
+    return ask_groq(api_key, model, prompt)

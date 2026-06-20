@@ -61,3 +61,18 @@ def get_memory(key):
     conn.close()
 
     return row[0] if row else None
+    
+    def auto_learn(user_input):
+    user_input = user_input.lower()
+
+    if "nama saya" in user_input:
+        name = user_input.split("nama saya")[-1].strip()
+        set_memory("name", name)
+        return f"ok, aku ingat kamu {name}"
+
+    if "panggil aku" in user_input:
+        name = user_input.split("panggil aku")[-1].strip()
+        set_memory("name", name)
+        return f"oke {name}"
+
+    return None

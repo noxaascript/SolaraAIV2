@@ -1,20 +1,20 @@
 from core.router import route
-from core.memory import save_chat
-from core.plugins import load_plugins
-from core.logs import log
+from core.memory import save_chat, init_db
 
-import time, sys
+import time
 
-load_plugins()
+init_db()
+
 
 def stream(text):
-    for c in text:
+    for c in str(text):
         print(c, end="", flush=True)
         time.sleep(0.005)
     print()
 
+
 def chat_loop():
-    print("SolaraAI Core v2 🔥")
+    print("SolaraAI Core Online 🔥")
 
     while True:
         user = input("you> ")
@@ -25,7 +25,6 @@ def chat_loop():
         result = route(user)
 
         print("solara> ", end="")
-        stream(str(result))
+        stream(result)
 
         save_chat(user, str(result))
-        log(user, result)

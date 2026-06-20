@@ -17,9 +17,9 @@ from core.workspace import (
     create_workspace,
     list_workspaces,
     add_file,
-    read_workspace
+    read_workspace,
+    ai_generate_workspace
 )
-from core.workspace import ai_generate_workspace
 
 
 def run_tool(user_input):
@@ -43,6 +43,7 @@ def run_tool(user_input):
             "/workspace list\n"
             "/workspace open <name>\n"
             "/workspace addfile <ws> <file> <content>\n"
+            "/workspace ai <name> <prompt>\n"
             "/ping\n"
             "/version"
         )
@@ -83,10 +84,8 @@ def run_tool(user_input):
 
     if cmd == "/models":
         result = ""
-
         for k, v in list_models().items():
             result += f"{k}. {v['name']} ({v['provider']})\n"
-
         return result
 
 
@@ -137,7 +136,7 @@ def run_tool(user_input):
 
 
     # =========================
-    # WORKSPACE SYSTEM
+    # WORKSPACE
     # =========================
     if cmd.startswith("/workspace create"):
         parts = cmd.split()
@@ -179,15 +178,25 @@ def run_tool(user_input):
         return add_file(ws, file_name, content)
 
 
+    if cmd.startswith("/workspace ai"):
+        parts = cmd.split()
+
+        if len(parts) < 4:
+            return "Usage: /workspace ai <name> <prompt>"
+
+        ws_name = parts[3]
+        prompt = " ".join(parts[4:])
+
+        return ai_generate_workspace(ws_name, prompt)
+
+
     # =========================
     # SYSTEM
     # =========================
     if cmd == "/ping":
         return "pong 🟢"
 
-
     if cmd == "/version":
         return "SolaraAI V2"
-
 
     return None

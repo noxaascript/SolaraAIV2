@@ -1,23 +1,81 @@
+from core.memory import (
+    auto_learn,
+    normalize,
+    build_memory_context
+)
+
 from core.commands import run_tool
-from core.memory import auto_learn, normalize
+
+from core.model_manager import get_model
+
+from providers.groq import ask_groq
+from providers.hf import ask_hf
 
 
 def route(user_input):
 
-    user_input = normalize(user_input)
+    # =========================
+    # NORMALIZE TEXT
+    # =========================
+    clean_input = normalize(user_input)
 
-    # 🧠 memory learn
-    learned = auto_learn(user_input)
+
+    # =========================
+    # AUTO LEARN MEMORY
+    # =========================
+    learned = auto_learn(clean_input)
+
     if learned:
         return learned
 
-    # ⚙️ COMMAND SYSTEM
-    if user_input.startswith("/"):
-        result = run_tool(user_input)
+
+    # =========================
+    # COMMAND SYSTEM
+    # =========================
+    if clean_input.startswith("/"):
+        result = run_tool(clean_input)
 
         if result is None:
-            return "unknown command ❌"
+            return "Unknown command ❌"
 
         return result
 
-    return f"you said: {user_input}"
+
+    # =========================
+    # BUILD AI CONTEXT
+    # =========================
+    memory_context = build_memory_context()
+
+    prompt = f"""
+You are SolaraAI, a powerful AI assistant.
+
+{memory_context}
+
+User message:
+{user_input}
+
+Answer naturally.
+"""
+
+
+    # =========================
+    # MODEL ROUTER
+    # =========================
+    model = get_model()
+
+
+    if model["provider"] == "groq":
+        return ask_groq(
+            model["name"],
+            prompt
+        )
+
+
+    if model["provider"] == "hf":
+        return ask_hf(
+            model["name"],
+            prompt
+        )
+
+
+    return "Error: Invalid AI provider"

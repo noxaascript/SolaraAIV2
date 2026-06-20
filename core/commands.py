@@ -19,6 +19,7 @@ from core.workspace import (
     add_file,
     read_workspace
 )
+from core.workspace import ai_generate_workspace
 
 
 def run_tool(user_input):

@@ -11,18 +11,18 @@ def route(user_input, user_id="default"):
     # COMMAND MODE
     # =========================
     if user_input.startswith("/"):
-        result = run_tool(user_input)
+        result = run_tool(user_input, user_id)
 
-        # kalau command valid
+        # command valid
         if result is not None:
             return result
 
         return "Unknown command. type /help"
 
     # =========================
-    # AI MODE (AUTO SWITCH)
+    # AI MODE (SELF-IMPROVING)
     # =========================
     try:
-        return auto_chat(user_input)
+        return auto_chat(user_input, user_id)
     except Exception as e:
-        return f"AI router error: {str(e)}"
+        return f"Router error: {str(e)}"

@@ -1,11 +1,16 @@
 import sqlite3
 import os
+import re
 
 DB_PATH = "db/memory.db"
 
 
+# ======================
+# INIT DB
+# ======================
 def init_db():
     os.makedirs("db", exist_ok=True)
+
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
@@ -28,6 +33,9 @@ def init_db():
     conn.close()
 
 
+# ======================
+# CHAT SAVE
+# ======================
 def save_chat(user, bot):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -38,6 +46,9 @@ def save_chat(user, bot):
     conn.close()
 
 
+# ======================
+# MEMORY CORE
+# ======================
 def set_memory(key, value):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -63,18 +74,40 @@ def get_memory(key):
     return row[0] if row else None
 
 
-# 🧠 auto learn sederhana
+# ======================
+# NORMALIZER (slang fix)
+# ======================
+def normalize(text):
+    t = text.lower()
+
+    slang = {
+        "gw": "saya",
+        "gue": "saya",
+        "aku": "saya",
+    }
+
+    for k, v in slang.items():
+        t = t.replace(k, v)
+
+    return t
+
+
+# ======================
+# AUTO LEARN (smart)
+# ======================
 def auto_learn(text):
-    text = text.lower()
+    text = normalize(text)
 
-    if "nama saya" in text:
-        name = text.split("nama saya")[-1].strip()
-        set_memory("name", name)
-        return f"oke, aku ingat kamu {name}"
+    patterns = [
+        r"nama (saya)\s*[:\-]?\s*(.+)",
+        r"panggil aku\s+(.+)"
+    ]
 
-    if "panggil aku" in text:
-        name = text.split("panggil aku")[-1].strip()
-        set_memory("name", name)
-        return f"oke {name}"
+    for p in patterns:
+        match = re.search(p, text)
+        if match:
+            name = match.group(len(match.groups())).strip()
+            set_memory("name", name)
+            return f"oke, aku ingat nama kamu {name}"
 
     return None

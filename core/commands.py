@@ -20,12 +20,12 @@ from core.workspace import (
     read_workspace
 )
 
-from core.website_pipeline import (
-    create_website_project,
-    deploy_project
-)
+from core.website_pipeline import create_web_project
 
 
+# =========================
+# MAIN COMMAND ROUTER
+# =========================
 def run_tool(user_input):
     cmd = user_input.strip().lower()
 
@@ -50,9 +50,8 @@ def run_tool(user_input):
             "/workspace open <name>\n"
             "/workspace addfile <ws> <file> <content>\n"
             "\n"
-            "Website AI:\n"
-            "/website create <name> <prompt>\n"
-            "/website deploy <name> <vercel/flask/infinityfree>\n"
+            "Web System:\n"
+            "/web create <name> <prompt>\n"
             "\n"
             "System:\n"
             "/ping\n"
@@ -60,7 +59,7 @@ def run_tool(user_input):
         )
 
     # =========================
-    # MEMORY
+    # MEMORY SYSTEM
     # =========================
     if cmd == "/memory":
         data = get_all_memory()
@@ -188,30 +187,18 @@ def run_tool(user_input):
 
 
     # =========================
-    # WEBSITE AI SYSTEM
+    # WEB SYSTEM (AUTO PROJECT)
     # =========================
-    if cmd.startswith("/website create"):
+    if cmd.startswith("/web create"):
         parts = cmd.split()
 
         if len(parts) < 4:
-            return "Usage: /website create <name> <prompt>"
-
-        name = parts[3]
-        prompt = " ".join(parts[4:])
-
-        return create_website_project(name, prompt)
-
-
-    if cmd.startswith("/website deploy"):
-        parts = cmd.split()
-
-        if len(parts) < 4:
-            return "Usage: /website deploy <name> <vercel/flask/infinityfree>"
+            return "Usage: /web create <name> <prompt>"
 
         name = parts[2]
-        platform = parts[3]
+        prompt = " ".join(parts[3:])
 
-        return deploy_project(name, platform)
+        return create_web_project(name, prompt)
 
 
     # =========================

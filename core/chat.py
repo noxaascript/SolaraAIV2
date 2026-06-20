@@ -1,6 +1,7 @@
 from core.router import route
 from core.memory import save_chat
 from core.plugins import load_plugins
+from core.logs import log
 
 import time, sys
 
@@ -27,3 +28,4 @@ def chat_loop():
         stream(str(result))
 
         save_chat(user, str(result))
+        log(user, result)

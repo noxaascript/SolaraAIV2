@@ -1,8 +1,3 @@
-from core.website_pipeline import (
-    create_website_project,
-    deploy_project
-)
-
 from core.memory import (
     get_all_memory,
     delete_memory,
@@ -22,8 +17,12 @@ from core.workspace import (
     create_workspace,
     list_workspaces,
     add_file,
-    read_workspace,
-    ai_generate_workspace
+    read_workspace
+)
+
+from core.website_pipeline import (
+    create_website_project,
+    deploy_project
 )
 
 
@@ -44,11 +43,18 @@ def run_tool(user_input):
             "/mode\n"
             "/modes\n"
             "/setmode <name>\n"
+            "\n"
+            "Workspace:\n"
             "/workspace create <name>\n"
             "/workspace list\n"
             "/workspace open <name>\n"
             "/workspace addfile <ws> <file> <content>\n"
-            "/workspace ai <name> <prompt>\n"
+            "\n"
+            "Website AI:\n"
+            "/website create <name> <prompt>\n"
+            "/website deploy <name> <vercel/flask/infinityfree>\n"
+            "\n"
+            "System:\n"
             "/ping\n"
             "/version"
         )
@@ -80,7 +86,7 @@ def run_tool(user_input):
 
 
     # =========================
-    # MODEL
+    # MODEL SYSTEM
     # =========================
     if cmd == "/model":
         m = get_model()
@@ -117,10 +123,8 @@ def run_tool(user_input):
 
     if cmd == "/modes":
         result = ""
-
         for m in get_modes():
             result += f"- {m}\n"
-
         return result
 
 
@@ -141,7 +145,7 @@ def run_tool(user_input):
 
 
     # =========================
-    # WORKSPACE
+    # WORKSPACE SYSTEM
     # =========================
     if cmd.startswith("/workspace create"):
         parts = cmd.split()
@@ -183,16 +187,31 @@ def run_tool(user_input):
         return add_file(ws, file_name, content)
 
 
-    if cmd.startswith("/workspace ai"):
+    # =========================
+    # WEBSITE AI SYSTEM
+    # =========================
+    if cmd.startswith("/website create"):
         parts = cmd.split()
 
         if len(parts) < 4:
-            return "Usage: /workspace ai <name> <prompt>"
+            return "Usage: /website create <name> <prompt>"
 
-        ws_name = parts[3]
+        name = parts[3]
         prompt = " ".join(parts[4:])
 
-        return ai_generate_workspace(ws_name, prompt)
+        return create_website_project(name, prompt)
+
+
+    if cmd.startswith("/website deploy"):
+        parts = cmd.split()
+
+        if len(parts) < 4:
+            return "Usage: /website deploy <name> <vercel/flask/infinityfree>"
+
+        name = parts[2]
+        platform = parts[3]
+
+        return deploy_project(name, platform)
 
 
     # =========================

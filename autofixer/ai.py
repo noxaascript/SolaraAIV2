@@ -1,33 +1,31 @@
-import requests
-from config import HF_API_KEY, MODEL
+from config import PROVIDERS, DEFAULT_PROVIDER
 
-def analyze_and_fix(error, files):
-    url = "https://api.groq.com/openai/v1/chat/completions"
+def ask_ai(provider, prompt):
+    config = PROVIDERS.get(provider, PROVIDERS[DEFAULT_PROVIDER])
 
-    context = ""
+    model = config["model"]
+    api_key = config["api_key"]
 
-    for f in files[:5]:
-        context += f"\nFILE: {f['path']}\n{f['content'][:800]}\n"
+    print(f"[DEBUG] provider={provider}")
+    print(f"[DEBUG] model={model}")
 
-    prompt = f"""
-Fix Python project error.
+    if provider == "groq":
+        return groq_request(model, api_key, prompt)
 
-ERROR:
-{error}
+    if provider == "hf_qwen":
+        return hf_request(model, api_key, prompt)
 
-PROJECT:
-{context}
+    if provider == "hf_kimi":
+        return hf_request(model, api_key, prompt)
 
-Return format:
-FILE: path
-CODE: fixed full code
-"""
+    return "[ERROR] provider not found"
 
-    r = requests.post(url, json={
-        "model": MODEL,
-        "messages": [{"role": "user", "content": prompt}]
-    }, headers={
-        "Authorization": f"Bearer {API_KEY}"
-    })
 
-    return r.json()["choices"][0]["message"]["content"]
+# ===== GROQ =====
+def groq_request(model, api_key, prompt):
+    return f"[GROQ:{model}] {prompt}"
+
+
+# ===== HF (QWEN + KIMI) =====
+def hf_request(model, api_key, prompt):
+    return f"[HF:{model}] {prompt}"

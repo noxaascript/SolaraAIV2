@@ -1,28 +1,35 @@
 import requests
 from config import API_KEY, MODEL
 
-def ask_ai(error_text, project_context=""):
+def analyze_and_fix(error, files):
     url = "https://api.groq.com/openai/v1/chat/completions"
 
-    headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
-    }
+    context = ""
+
+    for f in files[:5]:
+        context += f"\nFILE: {f['path']}\n{f['content'][:1000]}\n"
 
     prompt = f"""
-Kamu adalah senior software engineer.
+Kamu adalah senior Python engineer.
 
-Analisa error berikut:
-{error_text}
+Tugas:
+1. Analisis error
+2. Temukan file yang salah
+3. Perbaiki kode
+4. Output HARUS berupa:
+   - path file
+   - full fixed code
 
-Konteks project:
-{project_context}
+ERROR:
+{error}
 
-Berikan:
-1. Penyebab error
-2. File yang kemungkinan bermasalah
-3. Fix singkat
-4. Saran improvement
+PROJECT:
+{context}
+
+FORMAT WAJIB:
+FILE: path/to/file.py
+CODE:
+<fixed full code>
 """
 
     payload = {
@@ -32,5 +39,5 @@ Berikan:
         ]
     }
 
-    r = requests.post(url, json=payload, headers=headers)
+    r = requests.post(url, json=payload, headers={"Authorization": f"Bearer {API_KEY}"})
     return r.json()["choices"][0]["message"]["content"]

@@ -1,7 +1,7 @@
 from model_core.prompt import build_prompt
-from model_core.memory import add_memory, get_memory
+from model_core.memory import add_memory, improve_memory
 from model_core.router import route_intent
-from model_core.llm import call_llm
+from model_core.qwen import call_qwen
 
 
 def brain(user_input, user="default"):
@@ -10,7 +10,11 @@ def brain(user_input, user="default"):
 
     prompt = build_prompt(user_input)
 
-    response = call_llm(prompt, mode)
+    # 🔥 MEMORY SELF IMPROVE
+    improve_memory(user_input)
+
+    # 🔥 CALL QWEN
+    response = call_qwen(prompt, mode)
 
     add_memory(user, user_input, response)
 

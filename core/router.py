@@ -2,9 +2,8 @@
 # SOLARA AI V2 - Router System
 # ======================================
 
-from providers.qwen import ask_qwen
-from providers.kimi import ask_kimi
-
+from providers.hf import ask_hf
+from providers.groq import ask_groq
 
 def router(prompt, model="auto"):
     """

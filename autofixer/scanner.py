@@ -9,11 +9,9 @@ def scan_project(folder):
                 path = os.path.join(root, f)
 
                 with open(path, "r", encoding="utf-8") as file:
-                    content = file.read()
-
-                files.append({
-                    "path": path,
-                    "content": content
-                })
+                    files.append({
+                        "path": path,
+                        "content": file.read()
+                    })
 
     return files

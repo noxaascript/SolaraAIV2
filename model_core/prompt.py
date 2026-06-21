@@ -8,12 +8,16 @@ def build_prompt(user_input):
     context = ""
 
     for h in history:
-        context += f"User: {h['prompt']}\nAI: {h['response']}\n\n"
+
+        context += f"""
+User: {h['prompt']}
+AI: {h['response']}
+"""
 
     return f"""
 You are SolaraBrain AI.
 
-Context:
+Important Context:
 {context}
 
 User:

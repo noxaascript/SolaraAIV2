@@ -1,5 +1,5 @@
 import requests
-from config import API_KEY, MODEL
+from config import HF_API_KEY, MODEL
 
 def analyze_and_fix(error, files):
     url = "https://api.groq.com/openai/v1/chat/completions"

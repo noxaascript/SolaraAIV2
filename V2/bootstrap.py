@@ -1,7 +1,7 @@
 from V2.orchestrator.system_router import start_system
 
 def boot():
-    print("[V2] Booting Solara AI V2...")
+    print("[V2] Booting System...")
 
     start_system()
 

@@ -1,40 +1,43 @@
-import os
 import requests
+from model_core.config import HF_API_KEY, QWEN_MODEL
 
 
-QWEN_API_KEY = os.getenv("QWEN_API_KEY")
-QWEN_URL = "https://api.groq.com/openai/v1/chat/completions"
+HF_URL = f"https://api-inference.huggingface.co/models/{QWEN_MODEL}"
+
+
+headers = {
+    "Authorization": f"Bearer {HF_API_KEY}"
+}
 
 
 def call_qwen(prompt, mode="chat"):
 
-    if not QWEN_API_KEY:
-        return "[ERROR] QWEN_API_KEY not found in env"
-
-    headers = {
-        "Authorization": f"Bearer {QWEN_API_KEY}",
-        "Content-Type": "application/json"
-    }
-
-    data = {
-        "model": "qwen/qwen-2.5-72b-instruct",
-        "messages": [
-            {
-                "role": "system",
-                "content": f"You are Qwen AI in {mode} mode."
-            },
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
-        "temperature": 0.7
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "temperature": 0.7,
+            "max_new_tokens": 512
+        }
     }
 
     try:
-        res = requests.post(QWEN_URL, json=data, headers=headers)
+        res = requests.post(
+            HF_URL,
+            headers=headers,
+            json=payload,
+            timeout=30
+        )
 
-        return res.json()["choices"][0]["message"]["content"]
+        output = res.json()
+
+        # HF kadang beda format
+        if isinstance(output, list):
+            return output[0].get("generated_text", "")
+
+        if isinstance(output, dict):
+            return output.get("generated_text", str(output))
+
+        return str(output)
 
     except Exception as e:
-        return f"[QWEN ERROR] {str(e)}"
+        return f"[HF QWEN ERROR] {str(e)}"

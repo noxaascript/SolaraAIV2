@@ -1,10 +1,11 @@
+from ui.boot_anim import boot_animation
 from ui.boot import boot
 from ui.terminal_ui import banner, prompt, chat_ui
 from core.router import router
 
 
 # =========================
-# ERROR HANDLER
+# SAFE ROUTER WRAPPER
 # =========================
 
 def safe_router(user_input):
@@ -21,19 +22,26 @@ def safe_router(user_input):
 
 
 # =========================
-# MAIN LOOP
+# MAIN SYSTEM LOOP
 # =========================
 
 def main():
 
-    # boot sequence
+    # 1. animated boot
+    boot_animation()
+
+    # 2. system check boot (optional tambahan)
     boot()
 
-    # show banner
+    # 3. show banner
     banner()
 
-    print("Solara AI is now online 🔥\n")
-    print("Type 'exit' or 'quit' to stop system\n")
+    print("\nSOLARA AI V2 ONLINE ✔")
+    print("Type 'exit' or 'quit' to shutdown system\n")
+
+    # =========================
+    # CHAT LOOP
+    # =========================
 
     while True:
 
@@ -48,7 +56,7 @@ def main():
         # process AI safely
         response = safe_router(user_input)
 
-        # display chat
+        # output chat
         chat_ui("user", user_input, response)
 
 
@@ -60,6 +68,6 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\nSYSTEM INTERRUPTED (CTRL+C)")
+        print("\nSYSTEM STOPPED (CTRL+C)")
     except Exception as e:
         print(f"\nFATAL ERROR: {e}")

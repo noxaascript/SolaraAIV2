@@ -1,12 +1,7 @@
-from Core import router
+from V2.core_bridge import call_core
 
 def run_core(user_input):
-    """
-    bridge V2 → Core lama
-    """
-
     try:
-        return router.handle_input(user_input)
-
+        return call_core(user_input)
     except Exception as e:
         return f"[CORE ERROR] {str(e)}"

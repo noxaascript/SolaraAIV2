@@ -1,4 +1,4 @@
-from autofixer.main import main as auto_fix
+from autofixer.scanner import scan_project
 
 retry_count = 0
 MAX_RETRY = 2

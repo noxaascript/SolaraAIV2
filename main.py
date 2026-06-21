@@ -1,5 +1,5 @@
 import sys
-from runner import run_file
+from autofixer.runner import run_file
 from scanner import scan_project
 from debugger import debug_error
 from V2.bootstrap import boot

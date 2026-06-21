@@ -1,4 +1,4 @@
-from Core import router
+from core import router
 
 def run_core(user_input):
     try:

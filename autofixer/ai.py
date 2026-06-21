@@ -7,10 +7,10 @@ def analyze_and_fix(error, files):
     context = ""
 
     for f in files[:5]:
-        context += f"\nFILE: {f['path']}\n{f['content'][:1000]}\n"
+        context += f"\nFILE: {f['path']}\n{f['content'][:800]}\n"
 
     prompt = f"""
-Analisa error ini dan perbaiki:
+Fix Python project error.
 
 ERROR:
 {error}
@@ -18,16 +18,16 @@ ERROR:
 PROJECT:
 {context}
 
-OUTPUT:
+Return format:
 FILE: path
-CODE:
-fixed code full
+CODE: fixed full code
 """
 
-    payload = {
+    r = requests.post(url, json={
         "model": MODEL,
         "messages": [{"role": "user", "content": prompt}]
-    }
+    }, headers={
+        "Authorization": f"Bearer {API_KEY}"
+    })
 
-    r = requests.post(url, json=payload, headers={"Authorization": f"Bearer {API_KEY}"})
     return r.json()["choices"][0]["message"]["content"]

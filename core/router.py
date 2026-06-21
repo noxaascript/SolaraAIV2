@@ -1,29 +1,35 @@
-# ==============================
-# SOLARA AI V2 Router System
-# ==============================
-
-from providers.hf import ask_hf
 from providers.groq import ask_groq
 
-
-def router(prompt, model="auto"):
+def handle_input(user_input: str):
     """
-    Solara AI Router
-    Auto select model.
+    Main router untuk semua input user
     """
 
+    if not user_input:
+        return "No input detected"
+
+    text = user_input.strip()
+
+    # simple command system
+    if text.lower() in ["exit", "quit"]:
+        return "__EXIT__"
+
+    if text.lower() == "help":
+        return help_text()
+
+    # normal AI request
     try:
-        if model == "groq":
-            return ask_groq(prompt)
-
-        if model == "hf":
-            return ask_hf(prompt)
-
-        # Auto mode
-        if len(prompt) > 150:
-            return ask_hf(prompt)
-
-        return ask_groq(prompt)
+        response = ask_groq(text)
+        return response
 
     except Exception as e:
-        return f"⚠ Router Error: {e}"
+        return f"Router Error: {str(e)}"
+
+
+def help_text():
+    return """
+Available commands:
+- help  -> show this menu
+- exit  -> close app
+- any text -> AI chat
+"""

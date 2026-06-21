@@ -1,7 +1,8 @@
-from core import router
+def run_core(project_folder, main_file, project_files):
+    print("[EXECUTOR] running")
 
-def run_core(user_input):
-    try:
-        return router.handle_input(user_input)
-    except Exception as e:
-        return f"[CORE ERROR] {str(e)}"
+    return {
+        "project": project_folder,
+        "main": main_file,
+        "files": len(project_files)
+    }

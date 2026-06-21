@@ -1,17 +1,15 @@
-COMMON_ERRORS = {
-    "ModuleNotFoundError": "Kamu belum install library (pip install ...)",
-    "IndentationError": "Python error karena spasi/tab berantakan",
-    "SyntaxError": "Ada kode yang typo atau kurang tanda (:, ) , dll)",
-    "TypeError": "Tipe data salah (string vs int vs dict)",
-    "KeyError": "Key dictionary tidak ada",
-    "AttributeError": "Object tidak punya attribute yang dipanggil",
-    "IndexError": "List index keluar batas",
-    "ValueError": "Nilai input tidak sesuai format"
+# error_db.py - simple error hint system
+
+ERROR_MAP = {
+    "ModuleNotFoundError": "cek apakah file/module sudah ada atau salah import path",
+    "ImportError": "nama function/variable tidak ada di file target",
+    "KeyError": "cek key di dict config/provider",
+    "SyntaxError": "ada typo atau format Python salah",
+    "AttributeError": "object tidak punya attribute yang dipanggil"
 }
 
-def quick_hint(error_text):
-    for key in COMMON_ERRORS:
-        if key in error_text:
-            return COMMON_ERRORS[key]
-
-    return "Error tidak dikenal, butuh AI analysis"
+def quick_hint(error_msg: str):
+    for key in ERROR_MAP:
+        if key in error_msg:
+            return f"[HINT] {ERROR_MAP[key]}"
+    return "[HINT] unknown error, cek struktur project"

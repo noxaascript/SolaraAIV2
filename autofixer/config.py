@@ -3,3 +3,4 @@ MODEL = "llama3-8b-8192"
 
 AUTO_APPLY = False
 MAX_CONTENT = 1200
+SAFE_MODE = True

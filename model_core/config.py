@@ -1,0 +1,5 @@
+MODEL_NAME = "SolaraBrain"
+VERSION = "0.1"
+
+MAX_CONTEXT = 6
+TEMPERATURE = 0.7

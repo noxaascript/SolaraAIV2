@@ -1,86 +1,67 @@
 import time
 import sys
+from ui.colors import (
+    CYAN, MAGENTA, YELLOW, GREEN, BLUE, WHITE, GRAY, RED,
+    RESET, BOLD, DIM
+)
+from ui.spinner import progress_bar, Spinner, SPINNER_DOTS, SPINNER_ORBIT
 
-# =========================
-# BOOT LOGO
-# =========================
+
+LOGO = f"""
+{CYAN}███████╗ {MAGENTA}██████╗ {YELLOW}██╗    {GREEN} █████╗ {BLUE}██████╗  {WHITE} █████╗{RESET}
+{CYAN}██╔════╝{MAGENTA}██╔═══██╗{YELLOW}██║   {GREEN}██╔══██╗{BLUE}██╔══██╗{WHITE}██╔══██╗{RESET}
+{CYAN}███████╗{MAGENTA}██║   ██║{YELLOW}██║   {GREEN}███████║{BLUE}██████╔╝{WHITE}███████║{RESET}
+{CYAN}╚════██║{MAGENTA}██║   ██║{YELLOW}██║   {GREEN}██╔══██║{BLUE}██╔══██╗{WHITE}██╔══██║{RESET}
+{CYAN}███████║{MAGENTA}╚██████╔╝{YELLOW}███████╗{GREEN}██║  ██║{BLUE}██║  ██║{WHITE}██║  ██║{RESET}
+{CYAN}╚══════╝{MAGENTA} ╚═════╝ {YELLOW}╚══════╝{GREEN}╚═╝  ╚═╝{BLUE}╚═╝  ╚═╝{WHITE}╚═╝  ╚═╝{RESET}
+
+          {BOLD}{MAGENTA}SOLARA AI V2{RESET}  {GRAY}Hybrid AI • Developer • BrowserOS{RESET}
+"""
+
 
 def banner():
-    print("""
-███████╗ ██████╗ ██╗      █████╗ ██████╗  █████╗
-██╔════╝██╔═══██╗██║     ██╔══██╗██╔══██╗██╔══██╗
-███████╗██║   ██║██║     ███████║██████╔╝███████║
-╚════██║██║   ██║██║     ██╔══██║██╔══██╗██╔══██║
-███████║╚██████╔╝███████╗██║  ██║██║  ██║██║  ██║
-╚══════╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝
+    print(LOGO)
 
-          SOLARA AI V2 ONLINE
-    Hybrid AI • Developer • Browser
-""")
-
-
-# =========================
-# LOADING BAR
-# =========================
 
 def loading(text, speed=0.03):
-    print(f"\n[{text}] ", end="")
-    for _ in range(20):
-        print("█", end="")
-        sys.stdout.flush()
-        time.sleep(speed)
-    print(" OK")
+    progress_bar(text, total=25, speed=speed, color=CYAN)
 
-
-# =========================
-# FAKE SYSTEM CHECK
-# =========================
 
 def system_check():
     checks = [
-        "core modules",
-        "router engine",
-        "memory system",
-        "model loader",
-        "browser os"
+        ("core modules",   GREEN),
+        ("router engine",  CYAN),
+        ("memory system",  YELLOW),
+        ("model loader",   MAGENTA),
+        ("browser os",     BLUE),
     ]
+    print(f"\n  {BOLD}{CYAN}SYSTEM CHECK{RESET}\n")
+    for label, color in checks:
+        with Spinner(f"Checking {label}...", style=SPINNER_ORBIT, color=color):
+            time.sleep(0.6)
+        time.sleep(0.05)
 
-    print("\nSYSTEM CHECK INITIATED...\n")
-    for c in checks:
-        loading(f"checking {c}")
-
-
-# =========================
-# BUG FIX SIMULATION
-# =========================
 
 def bug_fix():
     bugs = [
-        "memory leak patch",
-        "router optimization",
-        "model fallback fix",
-        "ui rendering fix"
+        ("memory leak patch",      RED),
+        ("router optimization",    YELLOW),
+        ("model fallback fix",     MAGENTA),
+        ("ui rendering fix",       CYAN),
     ]
+    print(f"\n  {BOLD}{YELLOW}BUG FIX SCAN{RESET}\n")
+    for label, color in bugs:
+        with Spinner(f"Fixing {label}...", color=color):
+            time.sleep(0.45)
+        time.sleep(0.05)
+    print(f"\n  {BOLD}{GREEN}✔  All systems stable{RESET}\n")
 
-    print("\nBUG FIXING MODE ACTIVE...\n")
-    for b in bugs:
-        loading(f"fixing {b}", speed=0.02)
-
-    print("\nALL SYSTEMS STABLE ✔\n")
-
-
-# =========================
-# BOOT SEQUENCE
-# =========================
 
 def boot():
-    logo()
-    time.sleep(1)
-
-    print("Initializing Solara OS...\n")
-    time.sleep(1)
-
+    banner()
+    time.sleep(0.8)
+    print(f"  {DIM}Initializing Solara OS...{RESET}\n")
+    time.sleep(0.5)
     system_check()
     bug_fix()
-
-    print("BOOT COMPLETE. ENTERING AI MODE...\n")
+    print(f"  {BOLD}{GREEN}► BOOT COMPLETE — ENTERING AI MODE{RESET}\n")

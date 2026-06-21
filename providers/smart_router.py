@@ -1,67 +1,43 @@
 import time
-from providers.groq import ask_groq
-from providers.qwen import ask_qwen
-from providers.llama import ask_llama
+from providers.hf      import ask_hf
 from core.model_memory import get_scores, update_score
+from config            import PROVIDERS
 
 
-MODELS = {
-    "groq": lambda prompt: ask_groq("llama3-8b-8192", prompt),
-    "qwen": lambda prompt: ask_qwen("Qwen/Qwen2.5-7B-Instruct", prompt),
-    "llama": lambda prompt: ask_llama("meta-llama/Llama-3-8B-Instruct", prompt)
-}
+def _call(provider_key, prompt):
+    cfg = PROVIDERS[provider_key]
+    return ask_hf(prompt, model=cfg["model"], api_key=cfg["api_key"])
 
 
-# =========================
-# PICK BEST MODEL (LEARNING)
-# =========================
-def pick_model(user_id, prompt):
-
+def pick_model(user_id):
     scores = get_scores(user_id)
+    keys   = list(PROVIDERS.keys())
 
-    # default score kalau belum ada data
     def score(m):
-        return scores.get(m, 1)
+        return scores.get(m, 1.0)
 
-    # pilih skor tertinggi
-    best = max(MODELS.keys(), key=score)
-
-    return best
+    return max(keys, key=score)
 
 
-# =========================
-# AUTO CHAT + LEARNING
-# =========================
 def auto_chat(prompt, user_id="default"):
-
-    model = pick_model(user_id, prompt)
-
+    model = pick_model(user_id)
     start = time.time()
 
     try:
-        result = MODELS[model](prompt)
-
+        result  = _call(model, prompt)
         latency = time.time() - start
 
-        # =========================
-        # SCORE SYSTEM
-        # =========================
         score = 1.0
-
-        # cepat = bagus
-        if latency < 2:
+        if latency < 3:
             score += 1.0
-        elif latency > 6:
+        elif latency > 10:
             score -= 0.5
-
-        # error detection
         if "error" in str(result).lower():
             score -= 1.5
 
         update_score(user_id, model, score)
-
-        return result
+        return result, model
 
     except Exception as e:
         update_score(user_id, model, -2)
-        return f"AI error: {str(e)}"
+        return f"AI error: {str(e)}", model

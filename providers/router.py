@@ -1,17 +1,18 @@
-from providers.groq import ask_groq
-from providers.llama import ask_llama
-from providers.qwen import ask_qwen
+from providers.hf import ask_hf
+from config import PROVIDERS
 
 
-def run_ai(provider, api_key, model, prompt):
+def run_ai(provider, prompt, model=None, api_key=None):
+    cfg = PROVIDERS.get(provider)
+    if cfg is None:
+        available = ", ".join(PROVIDERS.keys())
+        return f"Unknown provider: '{provider}'. Available: {available}"
 
-    if provider == "groq":
-        return ask_groq(api_key, model, prompt)
+    _model   = model   or cfg["model"]
+    _api_key = api_key or cfg["api_key"]
 
-    if provider == "llama":
-        return ask_llama(api_key, model, prompt)
+    return ask_hf(prompt, model=_model, api_key=_api_key)
 
-    if provider == "qwen":
-        return ask_qwen(api_key, model, prompt)
 
-    return "Unknown provider"
+def list_providers():
+    return list(PROVIDERS.keys())

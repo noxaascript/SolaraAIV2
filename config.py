@@ -1,5 +1,6 @@
 import os
 
+GROQ_API_KEY = "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"
 HF_API_KEY = "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"
 
 # ─────────────────────────────────────────────

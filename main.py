@@ -1,7 +1,7 @@
 import sys
 from autofixer.runner import run_file
 from autofixer.scanner import scan_project
-from debugger import debug_error
+from autofixer.debugger import debug_error
 from V2.bootstrap import boot
 def main():
     if len(sys.argv) < 3:

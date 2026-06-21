@@ -1,8 +1,7 @@
 from V2.runtime.executor_bridge import run_core
 from V2.runtime.error_hook import handle_error
 
-def start_system():
-    print("[V2] System Online")
+def start_system(project_folder, main_file, project_files):
 
     while True:
         try:

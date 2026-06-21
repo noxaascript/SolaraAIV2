@@ -2,7 +2,7 @@ import sys
 from runner import run_file
 from scanner import scan_project
 from debugger import debug_error
-
+from V2.bootstrap import boot
 def main():
     if len(sys.argv) < 3:
         print("Usage: python main.py <project_folder> <main_file.py>")

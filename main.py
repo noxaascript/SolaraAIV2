@@ -1,73 +1,90 @@
-from ui.boot_anim import boot_animation
-from ui.boot import boot
-from ui.terminal_ui import banner, prompt, chat_ui
-from core.router import router
+import sys
+import time
+from core.router import handle_input
+
+VERSION = "1.0.0"
 
 
-# =========================
-# SAFE ROUTER WRAPPER
-# =========================
+def banner():
+    print("=" * 40)
+    print("      SOLARA AI TERMINAL")
+    print(f"          v{VERSION}")
+    print("=" * 40)
+    print("Type 'help' for commands")
+    print("Type 'exit' to quit\n")
 
-def safe_router(user_input):
+
+def loading_effect():
+    print("Starting system", end="")
+    for _ in range(3):
+        time.sleep(0.3)
+        print(".", end="")
+    print("\n")
+
+
+def print_help():
+    print("""
+COMMANDS:
+- help   : show commands
+- exit   : close program
+- clear  : clear screen
+- any text -> AI chat
+""")
+
+
+def clear_screen():
+    print("\033c", end="")
+
+
+def safe_input():
     try:
-        response = router(user_input)
+        return input("[user@solara $ ")
+    except KeyboardInterrupt:
+        print("\nExit signal detected")
+        sys.exit(0)
 
-        if response is None:
-            return "EMPTY_RESPONSE"
-
-        return response
-
-    except Exception as e:
-        return f"SYSTEM ERROR: {str(e)}"
-
-
-# =========================
-# MAIN SYSTEM LOOP
-# =========================
 
 def main():
-
-    # 1. animated boot
-    boot_animation()
-
-    # 2. system check boot (optional tambahan)
-    boot()
-
-    # 3. show banner
+    loading_effect()
     banner()
 
-    print("\nSOLARA AI V2 ONLINE ✔")
-    print("Type 'exit' or 'quit' to shutdown system\n")
-
-    # =========================
-    # CHAT LOOP
-    # =========================
-
     while True:
+        user_input = safe_input()
 
-        # input user
-        user_input = prompt("user")
+        if not user_input:
+            continue
 
-        # exit condition
-        if user_input.lower().strip() in ["exit", "quit"]:
-            print("\nShutting down Solara AI...")
+        command = user_input.strip().lower()
+
+        # EXIT
+        if command == "exit":
+            print("Shutting down...")
             break
 
-        # process AI safely
-        response = safe_router(user_input)
+        # HELP
+        if command == "help":
+            print_help()
+            continue
 
-        # output chat
-        chat_ui("user", user_input, response)
+        # CLEAR
+        if command == "clear":
+            clear_screen()
+            banner()
+            continue
 
+        # PROCESS AI
+        try:
+            result = handle_input(user_input)
 
-# =========================
-# ENTRY POINT
-# =========================
+            if result == "__EXIT__":
+                print("bye 👋")
+                break
+
+            print("\nAI:", result, "\n")
+
+        except Exception as e:
+            print(f"[ERROR] {str(e)}")
+
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("\nSYSTEM STOPPED (CTRL+C)")
-    except Exception as e:
-        print(f"\nFATAL ERROR: {e}")
+    main()

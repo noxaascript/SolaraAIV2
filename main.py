@@ -11,17 +11,10 @@ def main():
     project_folder = sys.argv[1]
     main_file = sys.argv[2]
 
-    print(f"[MAIN] project: {project_folder}")
-    print(f"[MAIN] entry: {main_file}")
+    print("[MAIN] starting")
 
-    # 🔥 SCAN PROJECT (REAL OUTPUT)
     project_files = scan_project(project_folder)
 
-    print(f"[MAIN] total files: {len(project_files)}")
-    print("[MAIN] sample files:")
-    print(project_files[:10])  # biar gak spam
-
-    # 🚀 START SYSTEM
     boot(project_folder, main_file, project_files)
 
 

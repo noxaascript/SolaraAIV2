@@ -1,6 +1,6 @@
 import sys
 from autofixer.runner import run_file
-from scanner import scan_project
+from autofixer.scanner import scan_project
 from debugger import debug_error
 from V2.bootstrap import boot
 def main():

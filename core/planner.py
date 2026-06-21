@@ -1,19 +1,19 @@
 from providers.smart_router import auto_chat
 
 
-def create_plan(prompt, user_id):
+def create_plan(prompt):
 
     return auto_chat(f"""
-You are an AI planner in a dev OS.
+You are AI Dev OS Planner with Browser access.
 
-Break this task into simple executable steps:
+If task needs information:
+- use browser_visit
+- use browser_summary
 
-Task: {prompt}
+Break task into steps:
 
-Rules:
-- short steps
-- executable actions only
-- no explanation
+Task:
+{prompt}
 
-Return list format.
+Return ONLY steps.
 """)

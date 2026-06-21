@@ -1,14 +1,10 @@
+from dotenv import load_dotenv
 import os
 
-GROQ_API_KEY = "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"
-HF_API_KEY = "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"
+load_dotenv()
 
-# ─────────────────────────────────────────────
-#  Only HuggingFace is required.
-#  The key is pre-loaded by start.sh automatically.
-# ─────────────────────────────────────────────
-
-HF_API_KEY = os.environ.get("HF_API_KEY", "")
+HF_API_KEY = os.getenv("HF_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 PROVIDERS = {
     "qwen": {

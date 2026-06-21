@@ -1,4 +1,4 @@
-from ai import ask_ai
+from autofixer.ai import ask_ai
 from error_db import quick_hint
 
 def debug_error(error_text, project_files):

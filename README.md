@@ -1,4 +1,4 @@
- Solara AI OS
+SolaraAI
 
 Solara AI OS is a modular AI system combining:
 - Multi-model AI (Qwen / Kimi / Groq / LLaMA)
@@ -53,9 +53,9 @@ cd SolaraAIV2
 2. Install dependencies
 
 pip install requests beautifulsoup4 transformers torch accelerate
+'''bash
 
-
----
+--------
 
 🔑 API Setup (optional)
 
@@ -185,6 +185,3 @@ Browser + Dev automation system
 
 
 ---
-
-Kalau kamu mau next step, aku bisa bikin:
-👉 **0** 😭🔥

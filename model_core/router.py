@@ -1,11 +1,32 @@
 def route_intent(text):
 
-    text = text.lower()
+    t = text.lower()
 
-    if any(k in text for k in ["code", "fix", "bug"]):
-        return "code_mode"
+    # =========================
+    # CODER BRAIN
+    # =========================
+    if any(k in t for k in [
+        "code", "bug", "fix", "error", "python", "function"
+    ]):
+        return "coder_brain"
 
-    if any(k in text for k in ["explain", "why", "how"]):
-        return "reason_mode"
+    # =========================
+    # REASONING BRAIN
+    # =========================
+    if any(k in t for k in [
+        "why", "how", "explain", "what", "analyze"
+    ]):
+        return "reason_brain"
 
-    return "chat_mode"
+    # =========================
+    # PLANNER BRAIN
+    # =========================
+    if any(k in t for k in [
+        "plan", "build", "create", "project", "app"
+    ]):
+        return "planner_brain"
+
+    # =========================
+    # DEFAULT CHAT
+    # =========================
+    return "chat_brain"

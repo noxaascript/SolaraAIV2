@@ -1,7 +1,7 @@
-from V2.core_bridge import call_core
+from Core import router
 
 def run_core(user_input):
     try:
-        return call_core(user_input)
+        return router.handle_input(user_input)
     except Exception as e:
         return f"[CORE ERROR] {str(e)}"

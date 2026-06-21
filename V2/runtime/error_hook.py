@@ -1,4 +1,4 @@
-from AutoFixer.main import main as auto_fix
+from autofixer.main import main as auto_fix
 
 retry_count = 0
 MAX_RETRY = 2

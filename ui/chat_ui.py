@@ -1,3 +1,6 @@
+from ui.typing import ai_type
+
+
 def chat_ui(user, message, response):
 
     print(f"""
@@ -8,6 +11,8 @@ USER: {user}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 AI RESPONSE:
-{response}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """)
+
+    ai_type(response)
+
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")

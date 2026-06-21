@@ -1,46 +1,33 @@
-import sys
 from scanner import scan_project
 from runner import run_file
 from ai import analyze_and_fix
 from patcher import apply_patch
 
-MAX_TRY = 3  # jumlah percobaan auto fix
-
 def main():
-    if len(sys.argv) < 3:
-        print("Usage: python main.py <project_folder> <main_file>")
-        return
+    folder = "AutoFixer/project"
+    file = "AutoFixer/project/main.py"
 
-    folder = sys.argv[1]
-    file = sys.argv[2]
+    print("[AutoFixer] scanning...")
 
-    print("🔍 scanning project...")
     files = scan_project(folder)
 
-    for i in range(MAX_TRY):
-        print(f"\n🚀 RUN #{i+1}")
+    print("[AutoFixer] running...")
 
-        code, out, err = run_file(file)
+    code, out, err = run_file(file)
 
-        # kalau sukses
-        if code == 0:
-            print("✅ CLEAN RUN")
-            print(out)
-            return
+    if code == 0:
+        print("OK")
+        return
 
-        # kalau error
-        print("❌ ERROR DETECTED\n")
-        print(err)
+    print("[ERROR DETECTED]")
+    print(err)
 
-        print("\n🧠 AI FIXING...\n")
+    print("[AI FIXING...]")
 
-        # kirim ke AI
-        ai_result = analyze_and_fix(err, files)
+    fix = analyze_and_fix(err, files)
 
-        # patch file
-        apply_patch(ai_result)
+    apply_patch(fix)
 
-    print("\n💀 STOP: MAX TRY REACHED (masih error)")
+    print("[RETRY...]")
 
-if __name__ == "__main__":
-    main()
+    run_file(file)

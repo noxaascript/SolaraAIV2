@@ -1,5 +1,7 @@
 import os
 
+HF_API_KEY = "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"
+
 # ─────────────────────────────────────────────
 #  Only HuggingFace is required.
 #  The key is pre-loaded by start.sh automatically.

@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 
-echo "Starting SolaraAI..."
+echo "[START] Solara AI V2 launching..."
+
 python main.py

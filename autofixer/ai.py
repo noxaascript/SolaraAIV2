@@ -10,15 +10,7 @@ def analyze_and_fix(error, files):
         context += f"\nFILE: {f['path']}\n{f['content'][:1000]}\n"
 
     prompt = f"""
-Kamu adalah senior Python engineer.
-
-Tugas:
-1. Analisis error
-2. Temukan file yang salah
-3. Perbaiki kode
-4. Output HARUS berupa:
-   - path file
-   - full fixed code
+Analisa error ini dan perbaiki:
 
 ERROR:
 {error}
@@ -26,17 +18,15 @@ ERROR:
 PROJECT:
 {context}
 
-FORMAT WAJIB:
-FILE: path/to/file.py
+OUTPUT:
+FILE: path
 CODE:
-<fixed full code>
+fixed code full
 """
 
     payload = {
         "model": MODEL,
-        "messages": [
-            {"role": "user", "content": prompt}
-        ]
+        "messages": [{"role": "user", "content": prompt}]
     }
 
     r = requests.post(url, json=payload, headers={"Authorization": f"Bearer {API_KEY}"})

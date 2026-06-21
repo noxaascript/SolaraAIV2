@@ -16,7 +16,7 @@ def dev_os_agent(prompt, user_id="default"):
     result = run_steps(plan, user_id)
 
     # 3. browser-aware verification
-    final = verify_result(prompt, result)
+    final = verify_result(prompt, result,user_id)
 
     # 4. memory save
     add_memory(user_id, prompt, final)

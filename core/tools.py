@@ -1,137 +1,80 @@
 import requests
-import os
+
+# BrowserOS import
+from browser_os.agent import agent as browser_agent
 
 
 # =========================
-# MAIN TOOL ENTRY
+# MAIN TOOL ROUTER
 # =========================
 def run_tool(name, *args):
 
     # =========================
-    # WEB FETCH TOOL (RAW)
+    # BASIC FETCH
     # =========================
     if name == "fetch":
-        url = args[0] if args else None
-        return fetch(url)
+        return fetch(args[0])
 
     # =========================
-    # CLEAN WEB SCRAPE TOOL
+    # CLEAN FETCH
     # =========================
     if name == "fetch_clean":
-        url = args[0] if args else None
-        return fetch_clean(url)
+        return fetch_clean(args[0])
 
     # =========================
-    # WORKSPACE TOOL
+    # WORKSPACE
     # =========================
     if name == "ws_create":
-        return workspace_create(*args)
+        return f"Workspace created: {args}"
 
     # =========================
-    # WEB GENERATOR TOOL
+    # WEB PROJECT
     # =========================
     if name == "web_create":
-        return web_create(*args)
+        return f"Web created: {args}"
+
+    # =========================
+    # 🌐 BROWSEROS INTEGRATION
+    # =========================
+    if name == "browser_visit":
+        url = args[0]
+        return browser_agent.visit(url)
+
+    if name == "browser_summary":
+        url = args[0]
+        return browser_agent.summarize(url)
 
     return f"Unknown tool: {name}"
 
 
 # =========================
-# RAW FETCH (BROWSER BASIC)
+# RAW FETCH
 # =========================
 def fetch(url):
 
-    if not url:
-        return "No URL provided"
-
     try:
-        headers = {"User-Agent": "Mozilla/5.0"}
-
-        r = requests.get(url, headers=headers, timeout=10)
-
+        r = requests.get(url, timeout=10)
         return r.text[:3000]
-
     except Exception as e:
-        return f"fetch error: {str(e)}"
+        return f"fetch error: {e}"
 
 
 # =========================
-# CLEAN FETCH (TEXT ONLY BROWSER)
+# CLEAN FETCH
 # =========================
 def fetch_clean(url):
-
-    if not url:
-        return "No URL provided"
 
     try:
         from bs4 import BeautifulSoup
 
-        headers = {"User-Agent": "Mozilla/5.0"}
-
-        r = requests.get(url, headers=headers, timeout=10)
+        r = requests.get(url, timeout=10)
 
         soup = BeautifulSoup(r.text, "html.parser")
 
-        for tag in soup(["script", "style", "noscript"]):
+        for tag in soup(["script", "style"]):
             tag.decompose()
 
-        text = soup.get_text(separator="\n")
-
-        lines = [line.strip() for line in text.splitlines()]
-        clean = "\n".join([l for l in lines if l])
-
-        return clean[:4000]
+        return soup.get_text()[:4000]
 
     except Exception as e:
-        return f"browser error: {str(e)}"
-
-
-# =========================
-# WORKSPACE CREATOR
-# =========================
-def workspace_create(name="project"):
-
-    try:
-        os.makedirs(name, exist_ok=True)
-
-        main_file = os.path.join(name, "main.py")
-
-        with open(main_file, "w") as f:
-            f.write("# auto generated workspace\nprint('hello world')\n")
-
-        return f"Workspace created: {name}"
-
-    except Exception as e:
-        return f"workspace error: {str(e)}"
-
-
-# =========================
-# WEB PROJECT GENERATOR
-# =========================
-def web_create(name, prompt=""):
-
-    try:
-        os.makedirs(name, exist_ok=True)
-
-        html_file = os.path.join(name, "index.html")
-
-        html_content = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{name}</title>
-</head>
-<body>
-    <h1>Auto Generated Site</h1>
-    <p>{prompt}</p>
-</body>
-</html>
-"""
-
-        with open(html_file, "w") as f:
-            f.write(html_content)
-
-        return f"Web project created: {name}"
-
-    except Exception as e:
-        return f"web error: {str(e)}"
+        return f"browser error: {e}"

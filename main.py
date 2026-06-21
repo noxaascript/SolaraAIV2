@@ -1,89 +1,33 @@
 import sys
-import time
-from core.router import handle_input
-
-VERSION = "1.0.0"
-
-
-def banner():
-    print("=" * 40)
-    print("      SOLARA AI TERMINAL")
-    print(f"          v{VERSION}")
-    print("=" * 40)
-    print("Type 'help' for commands")
-    print("Type 'exit' to quit\n")
-
-
-def loading_effect():
-    print("Starting system", end="")
-    for _ in range(3):
-        time.sleep(0.3)
-        print(".", end="")
-    print("\n")
-
-
-def print_help():
-    print("""
-COMMANDS:
-- help   : show commands
-- exit   : close program
-- clear  : clear screen
-- any text -> AI chat
-""")
-
-
-def clear_screen():
-    print("\033c", end="")
-
-
-def safe_input():
-    try:
-        return input("[user@solara $ ")
-    except KeyboardInterrupt:
-        print("\nExit signal detected")
-        sys.exit(0)
-
+from runner import run_file
+from scanner import scan_project
+from debugger import debug_error
 
 def main():
-    loading_effect()
-    banner()
+    if len(sys.argv) < 3:
+        print("Usage: python main.py <project_folder> <main_file.py>")
+        return
 
-    while True:
-        user_input = safe_input()
+    project_folder = sys.argv[1]
+    target_file = sys.argv[2]
 
-        if not user_input:
-            continue
+    print("🔍 Scanning project...")
+    project_files = scan_project(project_folder)
 
-        command = user_input.strip().lower()
+    print("🚀 Running file...\n")
 
-        # EXIT
-        if command == "exit":
-            print("Shutting down...")
-            break
+    code, out, err = run_file(target_file)
 
-        # HELP
-        if command == "help":
-            print_help()
-            continue
+    if code == 0:
+        print("✅ RUN SUCCESS")
+        print(out)
+    else:
+        print("❌ ERROR DETECTED\n")
+        print(err)
 
-        # CLEAR
-        if command == "clear":
-            clear_screen()
-            banner()
-            continue
-
-        # PROCESS AI
-        try:
-            result = handle_input(user_input)
-
-            if result == "__EXIT__":
-                print("bye 👋")
-                break
-
-            print("\nAI:", result, "\n")
-
-        except Exception as e:
-            print(f"[ERROR] {str(e)}")
+        print("\n🤖 AI MULTI-FILE ANALYSIS:\n")
+        result = debug_error(err, project_files)
+        print(result)
 
 
 if __name__ == "__main__":

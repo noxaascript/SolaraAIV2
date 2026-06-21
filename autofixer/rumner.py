@@ -1,8 +1,8 @@
 import subprocess
 
-def run_file(file_path):
+def run_file(file):
     result = subprocess.run(
-        ["python", file_path],
+        ["python", file],
         capture_output=True,
         text=True
     )

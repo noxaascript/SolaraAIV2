@@ -1,7 +1,18 @@
 from AutoFixer.main import main as auto_fix
 
+retry_count = 0
+MAX_RETRY = 2
+
 def handle_error(error_text):
-    print("[V2] Sending error to AutoFixer...")
+    global retry_count
+
+    print("[V2] Error detected")
+
+    if retry_count >= MAX_RETRY:
+        print("[STOP] Max retry reached 💀")
+        return
+
+    retry_count += 1
 
     try:
         auto_fix()

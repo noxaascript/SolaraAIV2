@@ -1,27 +1,46 @@
-from model_core.memory import get_memory
+memory_store = []
 
 
-def build_prompt(user_input):
+def add_memory(user, prompt, response, score=1):
 
-    history = get_memory()
+    memory_store.append({
+        "user": user,
+        "prompt": prompt,
+        "response": response,
+        "score": score
+    })
 
-    context = ""
+    if len(memory_store) > 200:
+        memory_store.pop(0)
 
-    for h in history:
 
-        context += f"""
-User: {h['prompt']}
-AI: {h['response']}
-"""
+def get_memory(limit=5):
 
-    return f"""
-You are SolaraBrain AI.
+    # ambil yang paling relevan (skor tinggi + recent)
+    sorted_mem = sorted(
+        memory_store,
+        key=lambda x: (x["score"], len(x["prompt"])),
+        reverse=True
+    )
 
-Important Context:
-{context}
+    return sorted_mem[:limit]
 
-User:
-{user_input}
 
-Answer:
-"""
+# =========================
+# AUTO IMPROVE MEMORY SCORE
+# =========================
+def improve_memory(user_input):
+
+    keywords = user_input.lower().split()
+
+    for mem in memory_store:
+
+        match = 0
+
+        for k in keywords:
+
+            if k in mem["prompt"].lower():
+                match += 1
+
+        if match >= 2:
+            mem["score"] += 1

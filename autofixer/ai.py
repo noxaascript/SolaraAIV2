@@ -1,7 +1,7 @@
 import requests
 from config import API_KEY, MODEL
 
-def ask_ai(error_text):
+def ask_ai(error_text, project_context=""):
     url = "https://api.groq.com/openai/v1/chat/completions"
 
     headers = {
@@ -9,11 +9,26 @@ def ask_ai(error_text):
         "Content-Type": "application/json"
     }
 
+    prompt = f"""
+Kamu adalah senior software engineer.
+
+Analisa error berikut:
+{error_text}
+
+Konteks project:
+{project_context}
+
+Berikan:
+1. Penyebab error
+2. File yang kemungkinan bermasalah
+3. Fix singkat
+4. Saran improvement
+"""
+
     payload = {
         "model": MODEL,
         "messages": [
-            {"role": "system", "content": "Kamu senior Python dev. Kasih fix singkat dan jelas."},
-            {"role": "user", "content": error_text}
+            {"role": "user", "content": prompt}
         ]
     }
 

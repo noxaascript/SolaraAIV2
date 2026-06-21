@@ -1,6 +1,6 @@
 import os
 
-HF_API_KEY = "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"
+HF_API_KEY = "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"
 
 # ─────────────────────────────────────────────
 #  Only HuggingFace is required.

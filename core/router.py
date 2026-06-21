@@ -1,47 +1,59 @@
-from core.commands import run_tool
-from core.agent_os import dev_os_agent
+# ======================================
+# SOLARA AI V2 - Router System
+# ======================================
+
+from providers.qwen import ask_qwen
+from providers.kimi import ask_kimi
 
 
-# =========================
-# AI DEV OS ROUTER
-# =========================
-def route(user_input, user_id="default"):
+def router(prompt, model="auto"):
+    """
+    Solara AI Router
+    Decide which AI model should answer.
+    """
 
-    # safety check
-    if not isinstance(user_input, str):
-        return "Invalid input"
+    prompt_lower = prompt.lower()
 
-    user_input = user_input.strip()
-
-    # =========================
-    # COMMAND MODE
-    # =========================
-    if user_input.startswith("/"):
-
-        try:
-            result = run_tool(user_input, user_id)
-
-            if result is None:
-                return "Unknown command. type /help"
-
-            return f"""⚙️ COMMAND EXECUTED
-
-{result}
-"""
-
-        except Exception as e:
-            return f"COMMAND ERROR: {str(e)}"
-
-    # =========================
-    # AI DEV OS MODE 🤖
-    # =========================
     try:
-        result = dev_os_agent(user_input, user_id)
+        # Auto routing
+        if model == "auto":
 
-        return f"""🤖 AI DEV OS RESPONSE
+            coding_keywords = [
+                "code",
+                "python",
+                "script",
+                "error",
+                "bug",
+                "fix",
+                "debug",
+                "program"
+            ]
 
-{result}
-"""
+            if any(word in prompt_lower for word in coding_keywords):
+                return ask_kimi(prompt)
+
+            return ask_qwen(prompt)
+
+        # Manual model selection
+        elif model == "qwen":
+            return ask_qwen(prompt)
+
+        elif model == "kimi":
+            return ask_kimi(prompt)
+
+        else:
+            return "⚠ Unknown model selected."
 
     except Exception as e:
-        return f"ROUTER ERROR: {str(e)}"
+        return f"⚠ Router Error: {str(e)}"
+
+
+# Test router
+if __name__ == "__main__":
+    while True:
+        text = input("Test > ")
+
+        if text.lower() == "exit":
+            break
+
+        print(router(text))

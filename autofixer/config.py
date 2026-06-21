@@ -1,0 +1,2 @@
+API_KEY = "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"
+MODEL = "llama3-8b-8192"

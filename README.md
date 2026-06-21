@@ -1,151 +1,75 @@
-# 🤖 SolaraAINEW
+# 🤖 SolaraAIV2
 
-SolaraAINEW is a modular AI Operating System that combines multiple AI models, a browser automation system, and a terminal-based interface into a single unified runtime.
+**SolaraAIV2** adalah sebuah *modular AI Operating System* berbasis terminal yang menggabungkan beberapa model AI, sistem otomasi browser, dan *runtime* terpadu dalam satu lingkungan terisolasi.
 
-The system is designed to act like a lightweight AI operating environment where different models can be selected dynamically depending on the type of task. It supports coding, reasoning, general conversation, and planning workflows through a routing system that distributes tasks to different AI brains.
-
-It also includes a memory layer that stores past interactions, allowing the system to maintain context over time and improve response relevance.
-
-This project is experimental and focused on building an AI architecture that behaves like a mini operating system inside a terminal.
+Proyek eksperimental ini dirancang layaknya sistem operasi ringan di dalam terminal. Sistem dapat memilih model AI secara dinamis berdasarkan jenis tugas (coding, penalaran, percakapan umum, atau perencanaan) melalui lapisan *routing* cerdas.
 
 ---
 
-## ⚡ Installation
+## ⚡ Fitur Utama
 
-Start by cloning the repository:
+* **Dynamic AI Routing:** Mengarahkan input pengguna secara otomatis ke model AI terbaik (Qwen untuk percakapan/penalaran, Kimi untuk pengerjaan kode).
+* **Memory Layer:** Menyimpan riwayat interaksi masa lalu untuk menjaga konteks percakapan jangka panjang.
+* **Lightweight Browser Automation:** Mengambil halaman web (HTTP request) dan mengekstrak teks HTML agar bisa diringkas langsung oleh AI.
+* **Terminal UI Runtime:** Antarmuka berbasis teks penuh yang interaktif dan responsif langsung dari command line.
 
+---
+
+## 🛠️ Cara Instalasi & Persyaratan
+
+Pastikan komputer Anda sudah terinstal **Python 3.10 atau versi di atasnya** beserta manajer paket `pip`.
+
+### 1. Kloning Repositori
 ```bash
 git clone https://github.com/noxaascript/SolaraAIV2
+cd SolaraAIV2
+```
 
-Move into the project directory:
-
-cd SolaraAIV2/SolaraAINEW
-
-Install required dependencies:
-
+### 2. Instal Dependensi Utama
+```bash
 pip install requests beautifulsoup4 transformers torch accelerate
+```
 
-If you are using HuggingFace models that require authentication, set your token:
-
-export HF_API_KEY="your_huggingface_token"
-
+### 3. Pengaturan API Key (Opsional)
+Jika Anda menggunakan model dari HuggingFace yang membutuhkan autentikasi token, masukkan perintah berikut di terminal Anda:
+```bash
+export HF_API_KEY="isi_token_huggingface_anda_disini"
+```
 
 ---
 
-🚀 Running the System
+## 🚀 Cara Menjalankan Sistem
 
-To start the AI system, run:
+Anda memiliki dua pilihan untuk mengeksekusi sistem runtime ini:
 
+**Opsi A: Menggunakan Shell Script (Direkomendasikan)**
+```bash
 bash start.sh
+```
 
-If you prefer running directly with Python, use:
-
+**Opsi B: Menggunakan Python Langsung**
+```bash
 python main.py
-
-The system will launch a terminal-based interface where you can interact with the AI.
-
+```
 
 ---
 
-🧠 System Behavior
+## 🧠 Alur Kerja Sistem (System Behavior)
 
-When the system is running, user input goes through several stages:
-
-1. Input is received from the terminal interface
-
-
-2. A router analyzes the input type (chat, coding, reasoning, planning)
-
-
-3. The appropriate AI model is selected automatically
-
-
-4. The selected model generates a response
-
-
-5. Optional tools such as browser or memory system may be activated
-
-
-6. The final response is displayed back in the terminal
-
-
-
-This allows the system to behave like a multi-agent AI environment rather than a single static model.
-
+Saat aplikasi berjalan, setiap input teks Anda akan melewati tahapan berikut:
+1. **Input Reception:** Teks diterima melalui antarmuka terminal.
+2. **Classification & Routing:** Router menganalisis jenis tugas (chat, coding, atau planning).
+3. **Model Selection:** Memilih otomatis antara backend **Qwen**, **Kimi**, atau API eksternal (**Groq / LLaMA**).
+4. **Execution & Tools:** Mengaktifkan subsistem memori atau modul browser jika mendeteksi link web.
+5. **Output Delivery:** Hasil pemrosesan akhir ditampilkan kembali ke layar terminal Anda.
 
 ---
 
-🤖 Model Handling
-
-The system can work with multiple AI backends:
-
-Qwen models for general conversation and reasoning
-
-Kimi models for coding-related tasks
-
-Optional API-based models such as Groq or LLaMA
-
-A routing layer that automatically selects the best model for the task
-
-
-Each model is used depending on the input classification from the router system.
-
+## ⚠️ Catatan & Batasan Proyek
+* **Kebutuhan Resource:** Menjalankan model berbasis Transformer lokal seperti Kimi membutuhkan spesifikasi perangkat keras (RAM/VRAM) yang cukup besar.
+* **Keterbatasan Browser:** Fitur browser bersifat *lightweight* (hanya berbasis HTTP request & BeautifulSoup) dan tidak setara dengan browser penuh berbasis Chromium.
 
 ---
 
-🌐 Browser Capability
-
-The system includes a lightweight browser module that can:
-
-Fetch web pages using HTTP requests
-
-Extract readable text from HTML content
-
-Pass extracted information into the AI system for summarization or reasoning
-
-
-This allows the AI to interact with external web content without requiring a full browser engine.
-
-
----
-
-⚙️ Requirements
-
-Make sure your system has:
-
-Python 3.10 or higher
-
-pip package manager
-
-Internet connection for model and browser features
-
-
-Required Python libraries:
-
-pip install requests
-pip install beautifulsoup4
-pip install transformers
-pip install torch
-pip install accelerate
-
-
----
-
-⚠️ Notes
-
-Some models may require significant system resources, especially transformer-based models such as Kimi.
-
-HuggingFace models may require authentication depending on usage limits.
-
-Browser features are lightweight and not equivalent to a full Chromium-based browser.
-
-This project is still under active development and may change frequently.
-
-
----
-
-💀 Disclaimer
-
-This project is built for experimental and educational purposes only. It is not intended for production environments.
-
-Use responsibly.
+## 💀 Disclaimer
+Proyek ini dibuat murni untuk tujuan **eksperimental dan edukasi**. Tidak disarankan atau ditujukan untuk lingkungan produksi (*production environment*). Gunakan dengan bijak dan penuh tanggung jawab.

@@ -1,51 +1,65 @@
-from ui.terminal_ui import clear, banner, prompt
-from ui.dashboard import dashboard
-from ui.chat_ui import chat_ui
-from ui.loader import loading
-
-from core.router import route
+from ui.boot import boot
+from ui.terminal_ui import banner, prompt, chat_ui
+from core.router import router
 
 
 # =========================
-# MAIN SOLARA AI OS
+# ERROR HANDLER
 # =========================
+
+def safe_router(user_input):
+    try:
+        response = router(user_input)
+
+        if response is None:
+            return "EMPTY_RESPONSE"
+
+        return response
+
+    except Exception as e:
+        return f"SYSTEM ERROR: {str(e)}"
+
+
+# =========================
+# MAIN LOOP
+# =========================
+
 def main():
 
-    clear()
+    # boot sequence
+    boot()
+
+    # show banner
     banner()
 
-    print("System initializing...\n")
+    print("Solara AI is now online 🔥\n")
+    print("Type 'exit' or 'quit' to stop system\n")
 
     while True:
 
-        # HOME DASHBOARD
-        dashboard()
-
-        # USER INPUT
+        # input user
         user_input = prompt("user")
 
-        # EXIT HANDLER
-        if user_input.lower() in ["exit", "quit", "/exit"]:
-            print("\nShutting down Solara AI OS...")
+        # exit condition
+        if user_input.lower().strip() in ["exit", "quit"]:
+            print("\nShutting down Solara AI...")
             break
 
-        if user_input.strip() == "":
-            continue
+        # process AI safely
+        response = safe_router(user_input)
 
-        # LOADING EFFECT
-        loading("SolaraAI processing")
-
-        # ROUTER (AI + COMMAND SYSTEM)
-        response = route(user_input, user_id="user")
-
-        # CHAT OUTPUT UI
+        # display chat
         chat_ui("user", user_input, response)
-
-        print("\n")
 
 
 # =========================
 # ENTRY POINT
 # =========================
+
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\nSYSTEM INTERRUPTED (CTRL+C)")
+    except Exception as e:
+        print(f"\nFATAL ERROR: {e}")

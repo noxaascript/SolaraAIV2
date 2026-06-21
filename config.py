@@ -1,2 +1,2 @@
-GROQ_API_KEY = "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"
-HF_API_KEY = "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"
+GROQ_API_KEY = "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"
+HF_API_KEY = "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"

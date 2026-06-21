@@ -1,11 +1,8 @@
 from V2.runtime.executor_bridge import run_core
 from V2.runtime.error_hook import handle_error
-from V2.plugins.plugin_loader import load_plugins
 
 def start_system():
-    print("[V2] System Router Online")
-
-    load_plugins()
+    print("[V2] System Online")
 
     while True:
         try:
@@ -19,4 +16,5 @@ def start_system():
             print(result)
 
         except Exception as e:
+            print("[V2 ERROR]")
             handle_error(str(e))

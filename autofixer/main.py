@@ -1,4 +1,4 @@
-from scanner import scan_project
+from autofixer.scanner import scan_project
 from runner import run_file
 from ai import analyze_and_fix
 from patcher import apply_patch

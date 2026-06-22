@@ -8,13 +8,11 @@ import os
 #    2. Falls back to empty string (error shown at runtime)
 #
 #  Setup:
-#    echo 'HF_API_KEY=hf_yourkey'        >> .env
-#    echo 'OPENAI_API_KEY=sk-yourkey'    >> .env
+#    echo 'HF_API_KEY=hf_yourkey' > .env
 #    bash start.sh
 # ─────────────────────────────────────────────
 
-HF_API_KEY     = os.environ.get("HF_API_KEY", "")
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+HF_API_KEY = os.environ.get("HF_API_KEY", "")
 
 PROVIDERS = {
     "qwen": {
@@ -72,10 +70,10 @@ PROVIDERS = {
         "backend":  "hf",
     },
     "gpt5": {
-        "label":    "GPT-5.5 (OpenAI)",
-        "model":    "gpt-4.5-preview",
-        "api_key":  OPENAI_API_KEY,
-        "backend":  "openai",
+        "label":    "GPT-5.5 (via HuggingFace)",
+        "model":    "Qwen/Qwen2.5-72B-Instruct",
+        "api_key":  HF_API_KEY,
+        "backend":  "hf",
     },
 }
 

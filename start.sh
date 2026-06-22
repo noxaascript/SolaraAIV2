@@ -28,13 +28,6 @@ if [ -z "$HF_API_KEY" ]; then
     exit 1
 fi
 
-# ── OpenAI key is optional (needed for gpt5) ──
-if [ -z "$OPENAI_API_KEY" ]; then
-    echo "  [note] OPENAI_API_KEY not set — GPT-5.5 will show a setup hint when used."
-    echo "         To enable: echo 'OPENAI_API_KEY=sk-yourkey' >> .env"
-    echo ""
-fi
-
 # ── Activate venv if present ──
 if [ -f "$DIR/venv/bin/activate" ]; then
     source "$DIR/venv/bin/activate"

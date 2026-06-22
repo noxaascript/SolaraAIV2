@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────
-#  Solara AI V2 — Launcher
+#  SolaraAI V2 — Launcher
 #  Works on Termux, Linux, macOS
 #  Just run:  bash start.sh
 # ─────────────────────────────────────────────
@@ -51,10 +51,27 @@ else
     exit 1
 fi
 
-# ── Install deps on first run ──
+# ── Install / update dependencies ──
+# First try normally (works on WiFi / fixed SSL).
+# If that fails (common on Termux mobile data with broken SSL certs),
+# retry with --trusted-host to bypass SSL verification for pip itself.
 if [ -f "$DIR/requirements.txt" ]; then
-    $PYTHON -m pip install -q -r "$DIR/requirements.txt" 2>/dev/null || true
+    echo "  Checking dependencies..."
+    if $PYTHON -m pip install -q -r "$DIR/requirements.txt"; then
+        echo "  Dependencies OK."
+    else
+        echo "  Normal install failed — retrying with SSL bypass (Termux fix)..."
+        $PYTHON -m pip install -q \
+            --trusted-host pypi.org \
+            --trusted-host pypi.python.org \
+            --trusted-host files.pythonhosted.org \
+            -r "$DIR/requirements.txt" \
+        && echo "  Dependencies installed (SSL bypassed)." \
+        || echo "  [warn] Could not install all packages. If chat fails, run:"
+        echo "         pip install requests --trusted-host pypi.org --trusted-host files.pythonhosted.org"
+    fi
 fi
 
 # ── Launch ──
+echo ""
 $PYTHON "$DIR/main.py" "$@"

@@ -9,21 +9,18 @@ from ui.spinner import Spinner, SPINNER_DOTS, SPINNER_ORBIT
 
 
 # ──────────────────────────────────────────────
-# BANNER
+# BANNER  (kept at 54 chars wide — safe on phone)
 # ──────────────────────────────────────────────
 
-_LOGO_LINES = [
-    r"  ░██████╗░░█████╗░██╗░░░░░░█████╗░██████╗░░█████╗░  ░█████╗░██╗",
-    r"  ██╔════╝██╔══██╗██║░░░░░██╔══██╗██╔══██╗██╔══██╗  ██╔══██╗██║",
-    r"  ╚█████╗░██║░░██║██║░░░░░███████║██████╔╝███████║  ███████║██║",
-    r"  ░╚═══██╗██║░░██║██║░░░░░██╔══██║██╔══██╗██╔══██║  ██╔══██║██║",
-    r"  ██████╔╝╚█████╔╝███████╗██║░░██║██║░░██║██║░░██║  ██║░░██║██║",
-    r"  ╚═════╝░░╚════╝░╚══════╝╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚═╝  ╚═╝░░╚═╝╚═╝",
+_ART = [
+    r" ███████╗ ██████╗ ██╗      █████╗ ██████╗  █╗",
+    r" ██╔════╝██╔═══██╗██║     ██╔══██╗██╔══██╗ ███╗",
+    r" ███████╗██║   ██║██║     ███████║██████╔╝  ██║",
+    r" ╚════██║██║   ██║██║     ██╔══██║██╔══██╗  ██║",
+    r" ███████║╚██████╔╝███████╗██║  ██║██║  ██║  ██║",
+    r" ╚══════╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝  ╚═╝",
 ]
-
-_ACCENT_COLORS = [CYAN, CYAN, MAGENTA, MAGENTA, CYAN, CYAN]
-
-LOGO = "\n".join(_LOGO_LINES)
+_COLORS = [CYAN, CYAN, MAGENTA, MAGENTA, CYAN, CYAN]
 
 
 def clear():
@@ -31,22 +28,22 @@ def clear():
 
 
 def banner():
-    width = 70
-    bar   = f"  {DIM}{CYAN}{'═' * width}{RESET}"
-
+    W = 52
+    bar  = f"  {DIM}{CYAN}{'═' * W}{RESET}"
+    thin = f"  {DIM}{GRAY}{'─' * W}{RESET}"
     print()
     print(bar)
     print()
-    for i, line in enumerate(_LOGO_LINES):
-        color = _ACCENT_COLORS[i % len(_ACCENT_COLORS)]
-        print(f"{BOLD}{color}{line}{RESET}")
+    for line, color in zip(_ART, _COLORS):
+        print(f"  {BOLD}{color}{line}{RESET}")
     print()
+    print(thin)
     print(
-        f"  {DIM}{CYAN}{'─' * width}{RESET}"
+        f"  {BOLD}{MAGENTA}✦  SolaraAI V2{RESET}  "
+        f"{DIM}{GRAY}— AI Terminal{RESET}"
     )
     print(
-        f"  {BOLD}{MAGENTA}✦  SolaraAI V2{RESET}"
-        f"  {DIM}{GRAY}—  AI Terminal  |  type {CYAN}/help{GRAY} for commands{RESET}"
+        f"  {DIM}{GRAY}type {CYAN}/help{GRAY} to see all commands{RESET}"
     )
     print(bar)
     print()
@@ -69,7 +66,7 @@ def loading(text="Loading"):
 
 def chat_ui(user, message, response):
     user_echo(message, username=user)
-    ai_type(response, label="Solara")
+    ai_type(response, label="SolaraAI")
 
 
 def help_menu():
@@ -81,35 +78,33 @@ def help_menu():
         ]),
         ("CONNECTION", [
             ("/ping",   "Check internet + HuggingFace + API key"),
-            ("/fix",    "Auto-fix SSL issues (Termux: installs ca-certificates)"),
+            ("/fix",    "Auto-fix SSL / ca-certificates on Termux"),
         ]),
         ("MODELS", [
             ("/model",  "Switch the active AI model"),
             ("/models", "List all available models"),
             ("/multi",  "Compare multiple models on one prompt"),
-            ("/auto",   "Toggle smart model auto-routing"),
+            ("/auto",   "Toggle smart auto-routing (ON/OFF)"),
         ]),
-        ("CHAT & MEMORY", [
-            ("/mode",   "Switch mode  (chat / dev / browser / auto)"),
+        ("CHAT", [
+            ("/mode",   "Switch mode: chat / dev / browser / auto"),
             ("/mem",    "View recent memory log"),
             ("/dash",   "Show session dashboard"),
         ]),
     ]
 
-    w = 46
+    W = 44
     print(f"\n  {BOLD}{CYAN}◈  SOLARAAI COMMANDS{RESET}")
-    print(f"  {GRAY}{'═' * w}{RESET}")
+    print(f"  {GRAY}{'═' * W}{RESET}")
 
     for section, cmds in sections:
         print(f"\n  {BOLD}{YELLOW}{section}{RESET}")
-        print(f"  {DIM}{GRAY}{'─' * w}{RESET}")
+        print(f"  {DIM}{GRAY}{'─' * W}{RESET}")
         for cmd, desc in cmds:
-            print(
-                f"  {BOLD}{CYAN}{cmd:<10}{RESET}  {GRAY}{desc}{RESET}"
-            )
+            print(f"  {BOLD}{CYAN}{cmd:<10}{RESET}  {GRAY}{desc}{RESET}")
 
-    print(f"\n  {GRAY}{'═' * w}{RESET}")
-    print(f"  {DIM}{GRAY}tip: type any message to chat  |  Ctrl-C to exit{RESET}\n")
+    print(f"\n  {GRAY}{'═' * W}{RESET}")
+    print(f"  {DIM}{GRAY}Just type to chat  ·  Ctrl-C to exit{RESET}\n")
 
 
 def status_line(model="qwen", mode="chat", user="user"):
@@ -118,12 +113,15 @@ def status_line(model="qwen", mode="chat", user="user"):
         f"  {DIM}{GRAY}user:{RESET}{WHITE}{user}{RESET}  "
         f"{DIM}{GRAY}model:{RESET}{CYAN}{model}{RESET}  "
         f"{DIM}{GRAY}mode:{RESET}{MAGENTA}{mode}{RESET}  "
-        f"{DIM}{GRAY}time:{RESET}{GRAY}{now}{RESET}"
+        f"{DIM}{GRAY}{now}{RESET}"
     )
 
 
 def model_switched(old, new):
-    print(f"\n  {GRAY}model:{RESET} {DIM}{old}{RESET} {CYAN}→{RESET} {BOLD}{CYAN}{new}{RESET}\n")
+    print(
+        f"\n  {GRAY}model:{RESET} {DIM}{old}{RESET} "
+        f"{CYAN}→{RESET} {BOLD}{CYAN}{new}{RESET}\n"
+    )
 
 
 def section_banner(title, icon="◈", color=None):

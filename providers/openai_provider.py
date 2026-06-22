@@ -52,7 +52,19 @@ def ask_openai(prompt, model="gpt-4o", api_key=None):
             "x  Request timed out (60s).\n"
             "   Try /model to switch to a faster model."
         )
-    except requests.exceptions.ConnectionError:
+    except requests.exceptions.SSLError:
+        return (
+            "x  SSL/TLS error connecting to OpenAI.\n"
+            "   Fix on Termux: pkg install ca-certificates\n"
+            "   Then restart: bash start.sh"
+        )
+    except requests.exceptions.ConnectionError as e:
+        if "SSL" in str(e) or "certificate" in str(e).lower():
+            return (
+                "x  SSL certificate error (common on Termux with mobile data).\n"
+                "   Fix: pkg install ca-certificates\n"
+                "   Then restart: bash start.sh"
+            )
         return (
             "x  No internet connection.\n"
             "   Check your WiFi/data, then try again."

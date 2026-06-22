@@ -185,10 +185,9 @@ EOF
 
 chmod +x start.sh
 
-# config
-cat > config.py << 'EOF'
-HF_TOKEN=""
-GROQ_API_KEY=""
+# config — HF only, key loaded from .env
+cat > .env << 'EOF'
+HF_API_KEY=
 EOF
 
 # gitignore

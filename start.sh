@@ -8,15 +8,24 @@
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$DIR"
 
-# ── HuggingFace API key (pre-configured) ──
-export HF_API_KEY="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"
+# ── Load .env file if it exists (takes priority) ──
+if [ -f "$DIR/.env" ]; then
+    set -a
+    source "$DIR/.env"
+    set +a
+fi
 
-# ── activate venv if present ──
+# ── Fallback: use built-in key if .env didn't set one ──
+if [ -z "$HF_API_KEY" ]; then
+    export HF_API_KEY="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"
+fi
+
+# ── Activate venv if present ──
 if [ -f "$DIR/venv/bin/activate" ]; then
     source "$DIR/venv/bin/activate"
 fi
 
-# ── find Python ──
+# ── Find Python ──
 if command -v python &>/dev/null; then
     PYTHON="python"
 elif command -v python3 &>/dev/null; then
@@ -28,10 +37,10 @@ else
     exit 1
 fi
 
-# ── install deps on first run ──
+# ── Install deps on first run ──
 if [ -f "$DIR/requirements.txt" ]; then
     $PYTHON -m pip install -q -r "$DIR/requirements.txt" 2>/dev/null || true
 fi
 
-# ── launch ──
+# ── Launch ──
 $PYTHON "$DIR/main.py" "$@"

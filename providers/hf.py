@@ -53,15 +53,22 @@ def ask_hf(prompt, model="Qwen/Qwen2.5-7B-Instruct", api_key=None):
             "✖  Request timed out (60s).\n"
             "   Try /model to switch to a faster model like 'phi' or 'mistral'."
         )
-    except requests.exceptions.ConnectionError:
-        return (
-            "✖  No internet connection.\n"
-            "   Check your WiFi/data, then try again."
-        )
     except requests.exceptions.SSLError:
         return (
             "✖  SSL/TLS error connecting to HuggingFace.\n"
-            "   Check your network or try: pkg install ca-certificates"
+            "   Fix on Termux: pkg install ca-certificates\n"
+            "   Then restart: bash start.sh"
+        )
+    except requests.exceptions.ConnectionError as e:
+        if "SSL" in str(e) or "certificate" in str(e).lower():
+            return (
+                "✖  SSL certificate error (common on Termux with mobile data).\n"
+                "   Fix: pkg install ca-certificates\n"
+                "   Then restart: bash start.sh"
+            )
+        return (
+            "✖  No internet connection.\n"
+            "   Check your WiFi/data, then try again."
         )
     except Exception as e:
         return f"✖  Unexpected error: {str(e)}"

@@ -1,40 +1,66 @@
-import requests
-import urllib3
 import os
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+try:
+    import requests
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    _HAS_REQUESTS = True
+except ImportError:
+    _HAS_REQUESTS = False
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 
 
-def _post(url, headers, json, timeout):
+def _no_requests_msg():
+    return (
+        "x  'requests' package is not installed.\n"
+        "   Run: pip install requests\n"
+        "   On Termux (if SSL broken):\n"
+        "     pip install requests \\\n"
+        "       --trusted-host pypi.org \\\n"
+        "       --trusted-host files.pythonhosted.org\n"
+        "   Then restart: bash start.sh"
+    )
+
+
+def _post_with_ssl_fallback(url, headers, json_data, timeout):
     """
-    Try with SSL verification first.
-    If SSL fails, retry without verification (Termux mobile-data fix).
+    Try POST with SSL verification first.
+    If SSL fails, auto-retry without verification (Termux mobile-data fix).
     Returns (response, ssl_bypassed: bool).
     """
     try:
-        return requests.post(url, headers=headers, json=json, timeout=timeout, verify=True), False
-    except (requests.exceptions.SSLError, requests.exceptions.ConnectionError) as first_err:
-        is_ssl = isinstance(first_err, requests.exceptions.SSLError) or (
-            "SSL" in str(first_err) or "certificate" in str(first_err).lower()
+        r = requests.post(url, headers=headers, json=json_data,
+                          timeout=timeout, verify=True)
+        return r, False
+    except Exception as first_err:
+        is_ssl = (
+            isinstance(first_err, requests.exceptions.SSLError)
+            or "SSL" in str(first_err)
+            or "certificate" in str(first_err).lower()
+            or "CERTIFICATE" in str(first_err)
         )
         if is_ssl:
             try:
-                return requests.post(url, headers=headers, json=json, timeout=timeout, verify=False), True
+                r = requests.post(url, headers=headers, json=json_data,
+                                  timeout=timeout, verify=False)
+                return r, True
             except Exception:
-                raise first_err
-        raise
+                pass
+        raise first_err
 
 
 def ask_openai(prompt, model="gpt-4o", api_key=None):
+    if not _HAS_REQUESTS:
+        return _no_requests_msg()
+
     key = api_key or OPENAI_API_KEY
     if not key:
         return (
             "x  OPENAI_API_KEY is not set.\n"
             "   Add it to your .env file:\n"
-            "   echo 'OPENAI_API_KEY=sk-yourkey' >> .env\n"
-            "   Then restart with: bash start.sh"
+            "     echo 'OPENAI_API_KEY=sk-yourkey' >> .env\n"
+            "   Then restart: bash start.sh"
         )
 
     url     = "https://api.openai.com/v1/chat/completions"
@@ -49,13 +75,13 @@ def ask_openai(prompt, model="gpt-4o", api_key=None):
         "temperature": 0.7,
     }
 
-    ssl_warning = (
-        "\n\n⚠  SSL verification bypassed (mobile data). "
-        "Run: pkg install ca-certificates  to fix."
+    ssl_note = (
+        "\n\n⚠  SSL bypassed (mobile data). "
+        "Run /fix or: pkg install ca-certificates"
     )
 
     try:
-        res, ssl_bypassed = _post(url, headers, payload, timeout=60)
+        res, ssl_bypassed = _post_with_ssl_fallback(url, headers, payload, timeout=60)
 
         if res.status_code == 401:
             return (
@@ -67,35 +93,22 @@ def ask_openai(prompt, model="gpt-4o", api_key=None):
         if res.status_code == 404:
             return (
                 f"x  Model '{model}' not found on OpenAI.\n"
-                "   Check available models at: platform.openai.com/docs/models"
+                "   Check: platform.openai.com/docs/models"
             )
         if res.status_code != 200:
             return f"x  OpenAI error {res.status_code}: {res.text[:200]}"
 
         data = res.json()
         text = data["choices"][0]["message"]["content"].strip()
-        return text + (ssl_warning if ssl_bypassed else "")
+        return text + (ssl_note if ssl_bypassed else "")
 
     except requests.exceptions.Timeout:
-        return (
-            "x  Request timed out (60s).\n"
-            "   Try /model to switch to a faster model."
-        )
-    except requests.exceptions.SSLError:
-        return (
-            "x  SSL/TLS error connecting to OpenAI.\n"
-            "   Fix on Termux: pkg install ca-certificates\n"
-            "   Or try: /fix"
-        )
+        return "x  Request timed out (60s). Try /model to switch to a faster model."
     except requests.exceptions.ConnectionError as e:
-        if "SSL" in str(e) or "certificate" in str(e).lower():
-            return (
-                "x  SSL certificate error (Termux mobile data).\n"
-                "   Try: /fix  or  pkg install ca-certificates"
-            )
         return (
-            "x  No internet connection.\n"
-            "   Check your WiFi/data, then try again."
+            "x  Connection failed.\n"
+            f"   Detail: {str(e)[:120]}\n"
+            "   Check your data/WiFi. If SSL error, run: /fix"
         )
     except Exception as e:
         return f"x  Unexpected error: {str(e)}"

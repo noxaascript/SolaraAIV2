@@ -1,22 +1,11 @@
 import os
 
 
-LOGO = """
-███████╗ ██████╗ ██╗      █████╗ ██████╗   █████╗
-██╔════╝██╔═══██╗██║     ██╔══██╗██╔══██╗ ██╔══██╗
-███████╗██║   ██║██║     ███████║██████╔╝ ███████║
-╚════██║██║   ██║██║     ██╔══██║██╔══██╗ ██╔══██║
-███████║╚██████╔╝███████╗██║  ██║██║  ██║ ██║  ██║
-╚══════╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝
-
-         SOLARA AI V2  —  HuggingFace Terminal
-"""
-
-
 def clear():
     os.system("clear" if os.name == "posix" else "cls")
 
 
 def boot_animation():
     clear()
-    print(LOGO)
+    from ui.terminal_ui import banner
+    banner()

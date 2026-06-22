@@ -8,78 +8,70 @@ except ImportError:
 
 from config import HF_API_KEY
 
+_NO_REQUESTS = (
+    "✖  'requests' is not installed.\n"
+    "   Fix on Termux:\n"
+    "     pip install requests \\\n"
+    "       --trusted-host pypi.org \\\n"
+    "       --trusted-host files.pythonhosted.org\n"
+    "   Then restart: bash start.sh"
+)
 
-def _no_requests_msg():
-    return (
-        "✖  'requests' package is not installed.\n"
-        "   Run: pip install requests\n"
-        "   On Termux (if SSL broken):\n"
-        "     pip install requests \\\n"
-        "       --trusted-host pypi.org \\\n"
-        "       --trusted-host files.pythonhosted.org\n"
-        "   Then restart: bash start.sh"
-    )
+_SSL_NOTE = (
+    "\n\n⚠  SSL cert bypassed (mobile data). "
+    "Run /fix or: pkg install ca-certificates"
+)
 
 
-def _post_with_ssl_fallback(url, headers, json_data, timeout):
+def _post(url, headers, json_data, timeout=60):
     """
-    Try POST with SSL verification.
-    If SSL fails, auto-retry without verification (Termux mobile-data fix).
-    Returns (response, ssl_bypassed: bool).
+    POST with automatic SSL-bypass fallback.
+    On Termux mobile data the SSL handshake fails and wraps as
+    'Max retries exceeded' (no 'SSL' keyword visible) — so we
+    ALWAYS retry with verify=False for any non-timeout failure.
+    Returns (response, ssl_was_bypassed).
     """
     try:
-        r = requests.post(url, headers=headers, json=json_data,
-                          timeout=timeout, verify=True)
-        return r, False
-    except Exception as first_err:
-        is_ssl = (
-            isinstance(first_err, requests.exceptions.SSLError)
-            or "SSL" in str(first_err)
-            or "certificate" in str(first_err).lower()
-            or "CERTIFICATE" in str(first_err)
-        )
-        if is_ssl:
-            try:
-                r = requests.post(url, headers=headers, json=json_data,
-                                  timeout=timeout, verify=False)
-                return r, True
-            except Exception:
-                pass
-        raise first_err
+        return requests.post(url, headers=headers, json=json_data,
+                             timeout=timeout, verify=True), False
+    except requests.exceptions.Timeout:
+        raise                             # timeout → don't retry, re-raise
+    except Exception as err:
+        try:                              # any other error → retry SSL-free
+            return requests.post(url, headers=headers, json=json_data,
+                                 timeout=timeout, verify=False), True
+        except requests.exceptions.Timeout:
+            raise
+        except Exception:
+            raise err                     # both failed → raise original
 
 
-def _get_with_ssl_fallback(url, headers, timeout):
-    """Same fallback logic for GET requests."""
+def _get(url, headers, timeout=10):
+    """Same SSL-bypass logic for GET requests."""
     try:
-        r = requests.get(url, headers=headers, timeout=timeout, verify=True)
-        return r, False
-    except Exception as first_err:
-        is_ssl = (
-            isinstance(first_err, requests.exceptions.SSLError)
-            or "SSL" in str(first_err)
-            or "certificate" in str(first_err).lower()
-            or "CERTIFICATE" in str(first_err)
-        )
-        if is_ssl:
-            try:
-                r = requests.get(url, headers=headers, timeout=timeout,
-                                 verify=False)
-                return r, True
-            except Exception:
-                pass
-        raise first_err
+        return requests.get(url, headers=headers,
+                            timeout=timeout, verify=True), False
+    except requests.exceptions.Timeout:
+        raise
+    except Exception as err:
+        try:
+            return requests.get(url, headers=headers,
+                                timeout=timeout, verify=False), True
+        except requests.exceptions.Timeout:
+            raise
+        except Exception:
+            raise err
 
 
 def ask_hf(prompt, model="Qwen/Qwen2.5-7B-Instruct", api_key=None):
     if not _HAS_REQUESTS:
-        return _no_requests_msg()
+        return _NO_REQUESTS
 
     key = api_key or HF_API_KEY
     if not key:
         return (
             "✖  HF_API_KEY is not set.\n"
-            "   Add it to your .env file:\n"
-            "     echo 'HF_API_KEY=hf_yourkey' >> .env\n"
+            "   Add to .env:  HF_API_KEY=hf_yourkey\n"
             "   Then restart: bash start.sh"
         )
 
@@ -94,25 +86,18 @@ def ask_hf(prompt, model="Qwen/Qwen2.5-7B-Instruct", api_key=None):
         },
     }
 
-    ssl_note = (
-        "\n\n⚠  SSL bypassed (mobile data). "
-        "Run /fix or: pkg install ca-certificates"
-    )
-
     try:
-        res, ssl_bypassed = _post_with_ssl_fallback(url, headers, payload, timeout=60)
+        res, bypassed = _post(url, headers, payload)
 
         if res.status_code == 503:
-            return (
-                "⏳  Model is warming up (~20 sec). Try again in a moment."
-            )
+            return "⏳  Model is warming up (~20 sec). Try again in a moment."
         if res.status_code == 401:
             return (
                 "✖  Invalid HF_API_KEY.\n"
-                "   Get a free key at: huggingface.co/settings/tokens"
+                "   Get a free key: huggingface.co/settings/tokens"
             )
         if res.status_code == 429:
-            return "✖  Rate limited by HuggingFace. Wait a moment and try again."
+            return "✖  Rate limited. Wait a moment and try again."
         if res.status_code != 200:
             return f"✖  HF error {res.status_code}: {res.text[:200]}"
 
@@ -124,18 +109,12 @@ def ask_hf(prompt, model="Qwen/Qwen2.5-7B-Instruct", api_key=None):
         else:
             text = str(data).strip()
 
-        return text + (ssl_note if ssl_bypassed else "")
+        return text + (_SSL_NOTE if bypassed else "")
 
     except requests.exceptions.Timeout:
         return (
-            "✖  Request timed out (60s).\n"
-            "   Try /model to switch to a faster model like 'phi' or 'mistral'."
-        )
-    except requests.exceptions.ConnectionError as e:
-        return (
-            "✖  Connection failed.\n"
-            f"   Detail: {str(e)[:120]}\n"
-            "   Check your data/WiFi. If SSL error, run: /fix"
+            "✖  Timed out (60s).\n"
+            "   Try a faster model: /model  →  phi or mistral"
         )
     except Exception as e:
-        return f"✖  Unexpected error: {str(e)}"
+        return f"✖  Connection failed: {str(e)[:200]}"

@@ -60,6 +60,9 @@ def cmd_ping():
         else:
             sp.stop(success=False, msg=f"HuggingFace  ✖  HTTP {r.status_code}")
             checks.append(False)
+    except requests.exceptions.SSLError:
+        sp.stop(success=False, msg="HuggingFace  ✖  SSL error — run /fix")
+        checks.append(False)
     except requests.exceptions.ConnectionError:
         sp.stop(success=False, msg="HuggingFace  ✖  unreachable")
         checks.append(False)
@@ -98,7 +101,54 @@ def cmd_ping():
     if all(checks):
         print(f"  {BOLD}{GREEN}✔  All systems go — ready to chat!{RESET}\n")
     else:
-        print(f"  {BOLD}{RED}✖  Some checks failed — see above.{RESET}\n")
+        print(f"  {BOLD}{RED}✖  Some checks failed — see above.{RESET}")
+        print(f"  {DIM}{GRAY}tip: run {CYAN}/fix{GRAY} to auto-repair SSL issues on Termux{RESET}\n")
+
+
+# ──────────────────────────────────────────────
+# /fix — auto-fix SSL / certificate issues
+# ──────────────────────────────────────────────
+
+def cmd_fix():
+    print(f"\n  {BOLD}{CYAN}◈  AUTO-FIX{RESET}")
+    print(f"  {GRAY}{'─' * 44}{RESET}\n")
+
+    # Detect Termux
+    in_termux = (
+        os.path.isdir("/data/data/com.termux")
+        or "com.termux" in os.environ.get("PREFIX", "")
+        or "termux" in os.environ.get("HOME", "").lower()
+    )
+
+    if not in_termux:
+        print(f"  {YELLOW}⚠  This fix is designed for Termux on Android.{RESET}")
+        print(f"  {GRAY}If you're on Linux/macOS, try:{RESET}")
+        print(f"  {CYAN}    pip install --upgrade certifi requests{RESET}\n")
+        return
+
+    print(f"  {GRAY}Installing CA certificates (fixes SSL errors on mobile data)...{RESET}\n")
+    ret = os.system("pkg install -y ca-certificates 2>&1")
+
+    print()
+    if ret == 0:
+        print(f"  {BOLD}{GREEN}✔  ca-certificates installed successfully.{RESET}")
+        print(f"  {GRAY}Also updating pip certifi just in case...{RESET}")
+        os.system("pip install --quiet --upgrade certifi requests 2>&1")
+        print()
+        print(f"  {BOLD}{GREEN}✔  All done!{RESET}")
+        print(f"  {GRAY}Restart SolaraAI to apply the fix:{RESET}")
+        print(f"  {CYAN}    bash start.sh{RESET}\n")
+        try:
+            ans = input(f"  {CYAN}Restart now? [y/N]: {RESET}").strip().lower()
+            if ans == "y":
+                print(f"\n  {DIM}{GRAY}Restarting...{RESET}\n")
+                os.execvp("bash", ["bash", "start.sh"])
+        except (KeyboardInterrupt, EOFError):
+            pass
+    else:
+        print(f"  {RED}✖  pkg install failed (exit code {ret}).{RESET}")
+        print(f"  {GRAY}Try manually:{RESET}")
+        print(f"  {CYAN}    pkg update && pkg install ca-certificates{RESET}\n")
 
 
 # ──────────────────────────────────────────────
@@ -159,6 +209,9 @@ def chat_loop(state):
         elif text == "/ping":
             cmd_ping()
 
+        elif text == "/fix":
+            cmd_fix()
+
         elif text == "/dash":
             clear()
             dashboard(
@@ -194,14 +247,14 @@ def chat_loop(state):
         elif text == "/multi":
             from providers.multi_model import multi_chat, print_multi_results
             keys = list(PROVIDERS.keys())
-            print(f"\n  MULTI-MODEL COMPARE")
-            print(f"  {'-' * 40}")
+            print(f"\n  {BOLD}{CYAN}◈  MULTI-MODEL COMPARE{RESET}")
+            print(f"  {GRAY}{'─' * 40}{RESET}")
             for i, k in enumerate(keys, 1):
                 label = PROVIDERS[k].get("label", k)
-                print(f"  [{i}]  {k:<12}  {label}")
-            print(f"  {'-' * 40}")
+                print(f"  {CYAN}[{i}]{RESET}  {k:<14}  {GRAY}{label}{RESET}")
+            print(f"  {GRAY}{'─' * 40}{RESET}")
             try:
-                sel = input("  Select models (e.g. 1,2,3 or all): ").strip()
+                sel = input(f"  {CYAN}Select models (e.g. 1,2,3 or all): {RESET}").strip()
                 if sel.lower() == "all":
                     chosen = keys
                 else:
@@ -217,7 +270,7 @@ def chat_loop(state):
                 if not chosen:
                     system_msg("No valid models selected.")
                 else:
-                    q = input("  Prompt: ").strip()
+                    q = input(f"  {CYAN}Prompt: {RESET}").strip()
                     if q:
                         sp = Spinner(f"Querying {len(chosen)} models", style=SPINNER_DOTS)
                         sp.start()

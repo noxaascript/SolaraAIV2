@@ -8,16 +8,24 @@
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$DIR"
 
-# ── Load .env file if it exists (takes priority) ──
+# ── Load .env file if it exists ──
 if [ -f "$DIR/.env" ]; then
     set -a
     source "$DIR/.env"
     set +a
 fi
 
-# ── Fallback: use built-in key if .env didn't set one ──
+# ── Check key is set ──
 if [ -z "$HF_API_KEY" ]; then
-    export HF_API_KEY="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"
+    echo ""
+    echo "  ✖  HF_API_KEY not set."
+    echo ""
+    echo "  Run this once to save your key:"
+    echo "    echo 'HF_API_KEY=your_key_here' > .env"
+    echo ""
+    echo "  Get a free key at: huggingface.co/settings/tokens"
+    echo ""
+    exit 1
 fi
 
 # ── Activate venv if present ──

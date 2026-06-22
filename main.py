@@ -8,10 +8,88 @@ from ui.terminal_ui import (
 )
 from ui.dashboard   import dashboard, models_menu
 from ui.typing      import ai_type, user_echo, error_msg, success_msg, system_msg
-from ui.spinner     import Spinner, SPINNER_DOTS
+from ui.spinner     import Spinner, SPINNER_DOTS, SPINNER_ORBIT
 from ui.colors      import CYAN, MAGENTA, YELLOW, GREEN, GRAY, RED, WHITE, RESET, BOLD, DIM
 from providers.router import run_ai, list_providers
 from config import PROVIDERS, DEFAULT_PROVIDER
+
+
+# ──────────────────────────────────────────────
+# /ping — test internet + HuggingFace connection
+# ──────────────────────────────────────────────
+
+def cmd_ping():
+    import socket
+    import requests
+    from config import HF_API_KEY
+
+    print(f"\n  {BOLD}{CYAN}◈  CONNECTION CHECK{RESET}")
+    print(f"  {GRAY}{'─' * 44}{RESET}\n")
+
+    checks = []
+
+    # 1. Internet (DNS)
+    sp = Spinner("Internet (DNS)", style=SPINNER_ORBIT, color=CYAN)
+    sp.start()
+    try:
+        socket.setdefaulttimeout(5)
+        socket.getaddrinfo("google.com", 443)
+        sp.stop(success=True, msg="Internet   ✔  connected")
+        checks.append(True)
+    except Exception:
+        sp.stop(success=False, msg="Internet   ✖  no connection — check WiFi/data")
+        checks.append(False)
+
+    # 2. HuggingFace reachable
+    sp = Spinner("HuggingFace API", style=SPINNER_ORBIT, color=MAGENTA)
+    sp.start()
+    try:
+        r = requests.get("https://huggingface.co", timeout=8)
+        if r.status_code < 400:
+            sp.stop(success=True, msg="HuggingFace  ✔  reachable")
+            checks.append(True)
+        else:
+            sp.stop(success=False, msg=f"HuggingFace  ✖  HTTP {r.status_code}")
+            checks.append(False)
+    except requests.exceptions.ConnectionError:
+        sp.stop(success=False, msg="HuggingFace  ✖  unreachable")
+        checks.append(False)
+    except Exception as e:
+        sp.stop(success=False, msg=f"HuggingFace  ✖  {str(e)[:40]}")
+        checks.append(False)
+
+    # 3. API key valid
+    sp = Spinner("API key", style=SPINNER_ORBIT, color=YELLOW)
+    sp.start()
+    if not HF_API_KEY:
+        sp.stop(success=False, msg="API key      ✖  not set")
+        checks.append(False)
+    else:
+        try:
+            r = requests.get(
+                "https://huggingface.co/api/whoami-v2",
+                headers={"Authorization": f"Bearer {HF_API_KEY}"},
+                timeout=8,
+            )
+            if r.status_code == 200:
+                name = r.json().get("name", "unknown")
+                sp.stop(success=True, msg=f"API key      ✔  valid  ({name})")
+                checks.append(True)
+            elif r.status_code == 401:
+                sp.stop(success=False, msg="API key      ✖  invalid — get one at huggingface.co/settings/tokens")
+                checks.append(False)
+            else:
+                sp.stop(success=False, msg=f"API key      ✖  HTTP {r.status_code}")
+                checks.append(False)
+        except Exception:
+            sp.stop(success=False, msg="API key      ✖  could not verify (no internet?)")
+            checks.append(False)
+
+    print(f"\n  {GRAY}{'─' * 44}{RESET}")
+    if all(checks):
+        print(f"  {BOLD}{GREEN}✔  All systems go — ready to chat!{RESET}\n")
+    else:
+        print(f"  {BOLD}{RED}✖  Some checks failed — see above.{RESET}\n")
 
 
 # ──────────────────────────────────────────────
@@ -68,6 +146,9 @@ def chat_loop(state):
 
         elif text in ("/help", "help"):
             help_menu()
+
+        elif text == "/ping":
+            cmd_ping()
 
         elif text == "/dash":
             clear()

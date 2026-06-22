@@ -275,9 +275,7 @@ def main():
         return
 
     # ── interactive AI mode ──
-    clear()
     boot_animation()
-    clear()
 
     dashboard(user="user", model=DEFAULT_PROVIDER, memory_count=0, mode="chat")
 

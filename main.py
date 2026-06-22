@@ -28,15 +28,24 @@ def cmd_ping():
 
     checks = []
 
-    # 1. Internet (DNS)
+    # 1. Internet (DNS) — try multiple hosts so one blocked domain doesn't
+    #    falsely report "no internet" on mobile networks
     sp = Spinner("Internet (DNS)", style=SPINNER_ORBIT, color=CYAN)
     sp.start()
-    try:
-        socket.setdefaulttimeout(5)
-        socket.getaddrinfo("google.com", 443)
+    _dns_hosts = ["huggingface.co", "cloudflare.com", "google.com"]
+    _connected = False
+    socket.setdefaulttimeout(5)
+    for _host in _dns_hosts:
+        try:
+            socket.getaddrinfo(_host, 443)
+            _connected = True
+            break
+        except Exception:
+            continue
+    if _connected:
         sp.stop(success=True, msg="Internet   ✔  connected")
         checks.append(True)
-    except Exception:
+    else:
         sp.stop(success=False, msg="Internet   ✖  no connection — check WiFi/data")
         checks.append(False)
 

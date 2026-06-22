@@ -15,17 +15,23 @@ if [ -f "$DIR/.env" ]; then
     set +a
 fi
 
-# ── Check HF key is set (required) ──
+# ── If key still missing, ask once and save it ──
 if [ -z "$HF_API_KEY" ]; then
     echo ""
-    echo "  x  HF_API_KEY not set."
-    echo ""
-    echo "  Run this once to save your key:"
-    echo "    echo 'HF_API_KEY=your_key_here' > .env"
-    echo ""
+    echo "  First-time setup — enter your HuggingFace API key."
     echo "  Get a free key at: huggingface.co/settings/tokens"
     echo ""
-    exit 1
+    read -r -p "  HF_API_KEY: " INPUT_KEY
+    if [ -z "$INPUT_KEY" ]; then
+        echo ""
+        echo "  No key entered. Exiting."
+        exit 1
+    fi
+    echo "HF_API_KEY=$INPUT_KEY" > "$DIR/.env"
+    export HF_API_KEY="$INPUT_KEY"
+    echo ""
+    echo "  Key saved to .env — you won't be asked again."
+    echo ""
 fi
 
 # ── Activate venv if present ──

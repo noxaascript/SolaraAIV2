@@ -1,39 +1,86 @@
-import requests
-import urllib3
+try:
+    import requests
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    _HAS_REQUESTS = True
+except ImportError:
+    _HAS_REQUESTS = False
+
 from config import HF_API_KEY
 
-# Suppress the InsecureRequestWarning when we fall back to verify=False
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+def _no_requests_msg():
+    return (
+        "✖  'requests' package is not installed.\n"
+        "   Run: pip install requests\n"
+        "   On Termux (if SSL broken):\n"
+        "     pip install requests \\\n"
+        "       --trusted-host pypi.org \\\n"
+        "       --trusted-host files.pythonhosted.org\n"
+        "   Then restart: bash start.sh"
+    )
 
 
-def _post(url, headers, json, timeout):
+def _post_with_ssl_fallback(url, headers, json_data, timeout):
     """
-    Try the request with SSL verification first.
-    If an SSL error occurs, retry without verification (Termux mobile-data fix).
+    Try POST with SSL verification.
+    If SSL fails, auto-retry without verification (Termux mobile-data fix).
     Returns (response, ssl_bypassed: bool).
     """
     try:
-        return requests.post(url, headers=headers, json=json, timeout=timeout, verify=True), False
-    except (requests.exceptions.SSLError, requests.exceptions.ConnectionError) as first_err:
-        is_ssl = isinstance(first_err, requests.exceptions.SSLError) or (
-            "SSL" in str(first_err) or "certificate" in str(first_err).lower()
+        r = requests.post(url, headers=headers, json=json_data,
+                          timeout=timeout, verify=True)
+        return r, False
+    except Exception as first_err:
+        is_ssl = (
+            isinstance(first_err, requests.exceptions.SSLError)
+            or "SSL" in str(first_err)
+            or "certificate" in str(first_err).lower()
+            or "CERTIFICATE" in str(first_err)
         )
         if is_ssl:
             try:
-                return requests.post(url, headers=headers, json=json, timeout=timeout, verify=False), True
+                r = requests.post(url, headers=headers, json=json_data,
+                                  timeout=timeout, verify=False)
+                return r, True
             except Exception:
-                raise first_err
-        raise
+                pass
+        raise first_err
+
+
+def _get_with_ssl_fallback(url, headers, timeout):
+    """Same fallback logic for GET requests."""
+    try:
+        r = requests.get(url, headers=headers, timeout=timeout, verify=True)
+        return r, False
+    except Exception as first_err:
+        is_ssl = (
+            isinstance(first_err, requests.exceptions.SSLError)
+            or "SSL" in str(first_err)
+            or "certificate" in str(first_err).lower()
+            or "CERTIFICATE" in str(first_err)
+        )
+        if is_ssl:
+            try:
+                r = requests.get(url, headers=headers, timeout=timeout,
+                                 verify=False)
+                return r, True
+            except Exception:
+                pass
+        raise first_err
 
 
 def ask_hf(prompt, model="Qwen/Qwen2.5-7B-Instruct", api_key=None):
+    if not _HAS_REQUESTS:
+        return _no_requests_msg()
+
     key = api_key or HF_API_KEY
     if not key:
         return (
             "✖  HF_API_KEY is not set.\n"
             "   Add it to your .env file:\n"
-            "   echo 'HF_API_KEY=hf_yourkey' >> .env\n"
-            "   Then restart with: bash start.sh"
+            "     echo 'HF_API_KEY=hf_yourkey' >> .env\n"
+            "   Then restart: bash start.sh"
         )
 
     url     = f"https://api-inference.huggingface.co/models/{model}"
@@ -47,18 +94,17 @@ def ask_hf(prompt, model="Qwen/Qwen2.5-7B-Instruct", api_key=None):
         },
     }
 
-    ssl_warning = (
-        "\n\n⚠  SSL verification bypassed (mobile data). "
-        "Run: pkg install ca-certificates  to fix."
+    ssl_note = (
+        "\n\n⚠  SSL bypassed (mobile data). "
+        "Run /fix or: pkg install ca-certificates"
     )
 
     try:
-        res, ssl_bypassed = _post(url, headers, payload, timeout=60)
+        res, ssl_bypassed = _post_with_ssl_fallback(url, headers, payload, timeout=60)
 
         if res.status_code == 503:
             return (
-                "⏳  Model is warming up on HuggingFace (~20 sec).\n"
-                "    Try again in a moment."
+                "⏳  Model is warming up (~20 sec). Try again in a moment."
             )
         if res.status_code == 401:
             return (
@@ -78,28 +124,18 @@ def ask_hf(prompt, model="Qwen/Qwen2.5-7B-Instruct", api_key=None):
         else:
             text = str(data).strip()
 
-        return text + (ssl_warning if ssl_bypassed else "")
+        return text + (ssl_note if ssl_bypassed else "")
 
     except requests.exceptions.Timeout:
         return (
             "✖  Request timed out (60s).\n"
             "   Try /model to switch to a faster model like 'phi' or 'mistral'."
         )
-    except requests.exceptions.SSLError:
-        return (
-            "✖  SSL/TLS error connecting to HuggingFace.\n"
-            "   Fix on Termux: pkg install ca-certificates\n"
-            "   Or try: /fix"
-        )
     except requests.exceptions.ConnectionError as e:
-        if "SSL" in str(e) or "certificate" in str(e).lower():
-            return (
-                "✖  SSL certificate error (Termux mobile data).\n"
-                "   Try: /fix  or  pkg install ca-certificates"
-            )
         return (
-            "✖  No internet connection.\n"
-            "   Check your WiFi/data, then try again."
+            "✖  Connection failed.\n"
+            f"   Detail: {str(e)[:120]}\n"
+            "   Check your data/WiFi. If SSL error, run: /fix"
         )
     except Exception as e:
         return f"✖  Unexpected error: {str(e)}"

@@ -1,14 +1,10 @@
-LOGO = """
-███████╗ ██████╗ ██╗      █████╗ ██████╗   █████╗
-██╔════╝██╔═══██╗██║     ██╔══██╗██╔══██╗ ██╔══██╗
-███████╗██║   ██║██║     ███████║██████╔╝ ███████║
-╚════██║██║   ██║██║     ██╔══██║██╔══██╗ ██╔══██║
-███████║╚██████╔╝███████╗██║  ██║██║  ██║ ██║  ██║
-╚══════╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝
+from ui.terminal_ui import banner as _ui_banner
 
-         SOLARA AI V2  —  HuggingFace Terminal
-"""
+LOGO = (
+    "  SolaraAI V2  —  AI Terminal\n"
+    "  type /help for commands"
+)
 
 
 def show_banner():
-    print(LOGO)
+    _ui_banner()

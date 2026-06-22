@@ -15,10 +15,10 @@ if [ -f "$DIR/.env" ]; then
     set +a
 fi
 
-# ── Check key is set ──
+# ── Check HF key is set (required) ──
 if [ -z "$HF_API_KEY" ]; then
     echo ""
-    echo "  ✖  HF_API_KEY not set."
+    echo "  x  HF_API_KEY not set."
     echo ""
     echo "  Run this once to save your key:"
     echo "    echo 'HF_API_KEY=your_key_here' > .env"
@@ -26,6 +26,13 @@ if [ -z "$HF_API_KEY" ]; then
     echo "  Get a free key at: huggingface.co/settings/tokens"
     echo ""
     exit 1
+fi
+
+# ── OpenAI key is optional (needed for gpt5) ──
+if [ -z "$OPENAI_API_KEY" ]; then
+    echo "  [note] OPENAI_API_KEY not set — GPT-5.5 will show a setup hint when used."
+    echo "         To enable: echo 'OPENAI_API_KEY=sk-yourkey' >> .env"
+    echo ""
 fi
 
 # ── Activate venv if present ──

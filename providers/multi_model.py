@@ -1,13 +1,11 @@
 import threading
-from providers.hf import ask_hf
+from providers.router import run_ai
 from config import PROVIDERS
 
 
 def _query_model(key, prompt, results):
-    cfg   = PROVIDERS.get(key, {})
-    model = cfg.get("model", key)
     try:
-        results[key] = ask_hf(prompt, model=model, api_key=cfg.get("api_key"))
+        results[key] = run_ai(key, prompt)
     except Exception as e:
         results[key] = f"[error] {str(e)}"
 

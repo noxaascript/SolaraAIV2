@@ -182,9 +182,45 @@ def chat_loop(state):
             except Exception as e:
                 system_msg(f"Memory unavailable: {e}")
 
+        elif text == "/multi":
+            from providers.multi_model import multi_chat, print_multi_results
+            keys = list(PROVIDERS.keys())
+            print(f"\n  MULTI-MODEL COMPARE")
+            print(f"  {'-' * 40}")
+            for i, k in enumerate(keys, 1):
+                label = PROVIDERS[k].get("label", k)
+                print(f"  [{i}]  {k:<12}  {label}")
+            print(f"  {'-' * 40}")
+            try:
+                sel = input("  Select models (e.g. 1,2,3 or all): ").strip()
+                if sel.lower() == "all":
+                    chosen = keys
+                else:
+                    chosen = []
+                    for part in sel.split(","):
+                        part = part.strip()
+                        if part.isdigit():
+                            idx = int(part) - 1
+                            if 0 <= idx < len(keys):
+                                chosen.append(keys[idx])
+                        elif part in PROVIDERS:
+                            chosen.append(part)
+                if not chosen:
+                    system_msg("No valid models selected.")
+                else:
+                    q = input("  Prompt: ").strip()
+                    if q:
+                        sp = Spinner(f"Querying {len(chosen)} models", style=SPINNER_DOTS)
+                        sp.start()
+                        results = multi_chat(q, chosen)
+                        sp.stop(success=True, msg=f"Done — {len(results)} responses")
+                        print_multi_results(q, results)
+            except (KeyboardInterrupt, EOFError):
+                pass
+
         elif text == "/auto":
             state["auto"] = not state.get("auto", False)
-            status = f"{GREEN}ON{RESET}" if state["auto"] else f"{RED}OFF{RESET}"
+            status = "ON" if state["auto"] else "OFF"
             system_msg(f"Smart auto-routing: {status}")
 
         elif text == "/mode":

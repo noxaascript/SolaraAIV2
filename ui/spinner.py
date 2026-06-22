@@ -1,22 +1,20 @@
 import sys
 import time
 import threading
-from ui.colors import CYAN, YELLOW, GREEN, RED, RESET, BOLD, GRAY
 
 
-SPINNER_DOTS     = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
-SPINNER_ARROW    = ["←", "↖", "↑", "↗", "→", "↘", "↓", "↙"]
-SPINNER_PULSE    = ["█", "▓", "▒", "░", "▒", "▓"]
-SPINNER_BOUNCE   = ["▁", "▃", "▄", "▅", "▆", "▇", "█", "▇", "▆", "▅", "▄", "▃"]
-SPINNER_ORBIT    = ["◐", "◓", "◑", "◒"]
-SPINNER_TRIANGLE = ["◢", "◣", "◤", "◥"]
+SPINNER_DOTS     = ["-", "\\", "|", "/"]
+SPINNER_ARROW    = ["<", "^", ">", "v"]
+SPINNER_PULSE    = [".", "o", "O", "o"]
+SPINNER_BOUNCE   = [".", "..", "...", ".."]
+SPINNER_ORBIT    = ["-", "\\", "|", "/"]
+SPINNER_TRIANGLE = ["<", "^", ">", "v"]
 
 
 class Spinner:
-    def __init__(self, text="Processing", style=None, color=CYAN):
+    def __init__(self, text="Processing", style=None, color=None):
         self.text    = text
         self.frames  = style or SPINNER_DOTS
-        self.color   = color
         self._stop   = threading.Event()
         self._thread = None
 
@@ -24,10 +22,10 @@ class Spinner:
         idx = 0
         while not self._stop.is_set():
             frame = self.frames[idx % len(self.frames)]
-            sys.stdout.write(f"\r{self.color}{frame}{RESET} {self.text} ")
+            sys.stdout.write(f"\r  {frame} {self.text} ")
             sys.stdout.flush()
             idx += 1
-            time.sleep(0.08)
+            time.sleep(0.1)
 
     def start(self):
         self._stop.clear()
@@ -39,9 +37,9 @@ class Spinner:
         self._stop.set()
         if self._thread:
             self._thread.join()
-        icon  = f"{GREEN}✔{RESET}" if success else f"{RED}✖{RESET}"
+        icon  = "+" if success else "x"
         label = msg or self.text
-        sys.stdout.write(f"\r{icon} {BOLD}{label}{RESET}          \n")
+        sys.stdout.write(f"\r  {icon} {label}          \n")
         sys.stdout.flush()
 
     def __enter__(self):
@@ -52,25 +50,14 @@ class Spinner:
         self.stop(success=(exc_type is None))
 
 
-def spin_task(text, fn, *args, **kwargs):
-    with Spinner(text) as sp:
-        result = fn(*args, **kwargs)
-    return result
-
-
-def progress_bar(text, total=20, speed=0.04, color=CYAN):
-    width = total
-    print(f"\n  {BOLD}{text}{RESET}")
-    sys.stdout.write(f"  {GRAY}[{' ' * width}]{RESET}")
-    sys.stdout.flush()
-
-    for i in range(1, width + 1):
-        filled  = "█" * i
-        empty   = " " * (width - i)
-        percent = int((i / width) * 100)
-        sys.stdout.write(f"\r  {color}[{filled}{empty}]{RESET} {BOLD}{percent}%{RESET}")
+def progress_bar(text, total=20, speed=0.04, color=None):
+    print(f"\n  {text}")
+    for i in range(1, total + 1):
+        filled  = "#" * i
+        empty   = " " * (total - i)
+        percent = int((i / total) * 100)
+        sys.stdout.write(f"\r  [{filled}{empty}] {percent}%")
         sys.stdout.flush()
         time.sleep(speed)
-
-    sys.stdout.write(f"\r  {GREEN}[{'█' * width}]{RESET} {BOLD}100% ✔{RESET}\n")
+    sys.stdout.write(f"\r  [{'#' * total}] 100% done\n")
     sys.stdout.flush()

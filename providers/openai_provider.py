@@ -1,7 +1,30 @@
 import requests
+import urllib3
 import os
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+
+
+def _post(url, headers, json, timeout):
+    """
+    Try with SSL verification first.
+    If SSL fails, retry without verification (Termux mobile-data fix).
+    Returns (response, ssl_bypassed: bool).
+    """
+    try:
+        return requests.post(url, headers=headers, json=json, timeout=timeout, verify=True), False
+    except (requests.exceptions.SSLError, requests.exceptions.ConnectionError) as first_err:
+        is_ssl = isinstance(first_err, requests.exceptions.SSLError) or (
+            "SSL" in str(first_err) or "certificate" in str(first_err).lower()
+        )
+        if is_ssl:
+            try:
+                return requests.post(url, headers=headers, json=json, timeout=timeout, verify=False), True
+            except Exception:
+                raise first_err
+        raise
 
 
 def ask_openai(prompt, model="gpt-4o", api_key=None):
@@ -26,8 +49,13 @@ def ask_openai(prompt, model="gpt-4o", api_key=None):
         "temperature": 0.7,
     }
 
+    ssl_warning = (
+        "\n\n⚠  SSL verification bypassed (mobile data). "
+        "Run: pkg install ca-certificates  to fix."
+    )
+
     try:
-        res = requests.post(url, headers=headers, json=payload, timeout=60)
+        res, ssl_bypassed = _post(url, headers, payload, timeout=60)
 
         if res.status_code == 401:
             return (
@@ -45,7 +73,8 @@ def ask_openai(prompt, model="gpt-4o", api_key=None):
             return f"x  OpenAI error {res.status_code}: {res.text[:200]}"
 
         data = res.json()
-        return data["choices"][0]["message"]["content"].strip()
+        text = data["choices"][0]["message"]["content"].strip()
+        return text + (ssl_warning if ssl_bypassed else "")
 
     except requests.exceptions.Timeout:
         return (
@@ -56,14 +85,13 @@ def ask_openai(prompt, model="gpt-4o", api_key=None):
         return (
             "x  SSL/TLS error connecting to OpenAI.\n"
             "   Fix on Termux: pkg install ca-certificates\n"
-            "   Then restart: bash start.sh"
+            "   Or try: /fix"
         )
     except requests.exceptions.ConnectionError as e:
         if "SSL" in str(e) or "certificate" in str(e).lower():
             return (
-                "x  SSL certificate error (common on Termux with mobile data).\n"
-                "   Fix: pkg install ca-certificates\n"
-                "   Then restart: bash start.sh"
+                "x  SSL certificate error (Termux mobile data).\n"
+                "   Try: /fix  or  pkg install ca-certificates"
             )
         return (
             "x  No internet connection.\n"

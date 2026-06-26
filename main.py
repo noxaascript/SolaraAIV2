@@ -15,28 +15,20 @@ from config import PROVIDERS, DEFAULT_PROVIDER
 
 
 # ──────────────────────────────────────────────
-# /ping — test internet + HuggingFace connection
+# /ping
 # ──────────────────────────────────────────────
 
 def _safe_get(url, headers=None, timeout=10):
-    """
-    GET with automatic SSL-bypass fallback.
-    Always retries with verify=False on any non-timeout failure —
-    covers 'Max retries exceeded' which never contains 'SSL'.
-    Returns (response, ssl_was_bypassed).
-    """
     import requests
     import urllib3
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     try:
-        return requests.get(url, headers=headers or {},
-                            timeout=timeout, verify=True), False
+        return requests.get(url, headers=headers or {}, timeout=timeout, verify=True), False
     except requests.exceptions.Timeout:
         raise
     except Exception as err:
         try:
-            return requests.get(url, headers=headers or {},
-                                timeout=timeout, verify=False), True
+            return requests.get(url, headers=headers or {}, timeout=timeout, verify=False), True
         except requests.exceptions.Timeout:
             raise
         except Exception:
@@ -46,14 +38,9 @@ def _safe_get(url, headers=None, timeout=10):
 def cmd_ping():
     import socket
     from config import HF_API_KEY
-
     print(f"\n  {BOLD}{CYAN}◈  CONNECTION CHECK{RESET}")
     print(f"  {GRAY}{'─' * 44}{RESET}\n")
-
     checks = []
-
-    # ── 1. Internet (DNS) ────────────────────────────────
-    # Try multiple hosts — some ISPs/carriers block google.com DNS
     sp = Spinner("Internet (DNS)", style=SPINNER_ORBIT, color=CYAN)
     sp.start()
     _dns_hosts = ["huggingface.co", "cloudflare.com", "1.1.1.1", "8.8.8.8", "google.com"]
@@ -67,20 +54,18 @@ def cmd_ping():
         except Exception:
             continue
     if _connected:
-        sp.stop(success=True, msg="Internet      ✔  connected")
+        sp.stop(success=True,  msg="Internet      ✔  connected")
         checks.append(True)
     else:
         sp.stop(success=False, msg="Internet      ✖  no connection — check WiFi/data")
         checks.append(False)
-
-    # ── 2. HuggingFace reachable (with SSL bypass) ───────
     sp = Spinner("HuggingFace API", style=SPINNER_ORBIT, color=MAGENTA)
     sp.start()
     try:
         r, bypassed = _safe_get("https://huggingface.co", timeout=10)
         if r.status_code < 400:
             note = " (SSL bypassed)" if bypassed else ""
-            sp.stop(success=True, msg=f"HuggingFace   ✔  reachable{note}")
+            sp.stop(success=True,  msg=f"HuggingFace   ✔  reachable{note}")
             checks.append(True)
         else:
             sp.stop(success=False, msg=f"HuggingFace   ✖  HTTP {r.status_code}")
@@ -88,8 +73,6 @@ def cmd_ping():
     except Exception as e:
         sp.stop(success=False, msg=f"HuggingFace   ✖  {str(e)[:50]}")
         checks.append(False)
-
-    # ── 3. API key valid ─────────────────────────────────
     sp = Spinner("API key", style=SPINNER_ORBIT, color=YELLOW)
     sp.start()
     if not HF_API_KEY:
@@ -97,14 +80,11 @@ def cmd_ping():
         checks.append(False)
     else:
         try:
-            r, _ = _safe_get(
-                "https://huggingface.co/api/whoami-v2",
-                headers={"Authorization": f"Bearer {HF_API_KEY}"},
-                timeout=10,
-            )
+            r, _ = _safe_get("https://huggingface.co/api/whoami-v2",
+                             headers={"Authorization": f"Bearer {HF_API_KEY}"}, timeout=10)
             if r.status_code == 200:
                 name = r.json().get("name", "unknown")
-                sp.stop(success=True, msg=f"API key       ✔  valid ({name})")
+                sp.stop(success=True,  msg=f"API key       ✔  valid ({name})")
                 checks.append(True)
             elif r.status_code == 401:
                 sp.stop(success=False, msg="API key       ✖  invalid — huggingface.co/settings/tokens")
@@ -115,7 +95,6 @@ def cmd_ping():
         except Exception as e:
             sp.stop(success=False, msg=f"API key       ✖  {str(e)[:50]}")
             checks.append(False)
-
     print(f"\n  {GRAY}{'─' * 44}{RESET}")
     if all(checks):
         print(f"  {BOLD}{GREEN}✔  All systems go — ready to chat!{RESET}\n")
@@ -125,25 +104,22 @@ def cmd_ping():
 
 
 # ──────────────────────────────────────────────
-# /fix — auto-fix SSL / certificate issues
+# /fix
 # ──────────────────────────────────────────────
 
 def cmd_fix():
     print(f"\n  {BOLD}{CYAN}◈  AUTO-FIX{RESET}")
     print(f"  {GRAY}{'─' * 44}{RESET}\n")
-
     in_termux = (
         os.path.isdir("/data/data/com.termux")
         or "com.termux" in os.environ.get("PREFIX", "")
         or "termux" in os.environ.get("HOME", "").lower()
     )
-
     if not in_termux:
         print(f"  {YELLOW}⚠  This fix is for Termux on Android.{RESET}")
         print(f"  {GRAY}On Linux/macOS try:{RESET}")
         print(f"  {CYAN}    pip install --upgrade certifi requests{RESET}\n")
         return
-
     print(f"  {GRAY}Installing CA certificates (fixes SSL on mobile data)...{RESET}\n")
     ret = os.system("pkg install -y ca-certificates 2>&1")
     print()
@@ -163,13 +139,10 @@ def cmd_fix():
         print(f"  {RED}✖  pkg install failed (exit {ret}).{RESET}")
         print(f"  {GRAY}Try:{RESET}")
         print(f"  {CYAN}    pkg update && pkg install ca-certificates{RESET}\n")
-        print(f"  {GRAY}Or install requests bypassing SSL:{RESET}")
-        print(f"  {CYAN}    pip install requests --trusted-host pypi.org "
-              f"--trusted-host files.pythonhosted.org{RESET}\n")
 
 
 # ──────────────────────────────────────────────
-# /update — pull latest from GitHub and restart
+# /update
 # ──────────────────────────────────────────────
 
 def cmd_update():
@@ -200,9 +173,7 @@ def handle_model_switch(state):
     models_menu(current=state["model"])
     keys = list(PROVIDERS.keys())
     try:
-        choice = input(
-            f"  {CYAN}Enter model name or number (1–{len(keys)}): {RESET}"
-        ).strip()
+        choice = input(f"  {CYAN}Enter model name or number (1–{len(keys)}): {RESET}").strip()
         if choice.isdigit():
             idx = int(choice) - 1
             if 0 <= idx < len(keys):
@@ -239,8 +210,6 @@ def chat_loop(state):
         if not text:
             continue
 
-        # ── commands ──────────────────────────────────────
-
         if text in ("/exit", "exit", "quit"):
             print(f"\n  {DIM}{GRAY}Goodbye. ✦{RESET}\n")
             break
@@ -257,14 +226,32 @@ def chat_loop(state):
         elif text == "/update":
             cmd_update()
 
+        elif text.startswith("/search"):
+            query = text[7:].strip()
+            if not query:
+                system_msg("Usage: /search <query>  — searches the offline knowledge base")
+                system_msg("Example: /search python decorators")
+            else:
+                try:
+                    from knowledge.search import search_kb, format_results
+                    colors = {
+                        "CYAN": CYAN, "YELLOW": YELLOW, "GRAY": GRAY,
+                        "BOLD": BOLD, "DIM": DIM, "GREEN": GREEN, "RESET": RESET,
+                    }
+                    sp = Spinner("Searching knowledge base", style=SPINNER_DOTS, color=CYAN)
+                    sp.start()
+                    results = search_kb(query, top_k=5)
+                    sp.stop(success=bool(results), msg=f"Found {len(results)} result(s)")
+                    print(format_results(results, query, colors=colors))
+                except ImportError:
+                    error_msg("Knowledge base not available — run: git pull")
+                except Exception as e:
+                    error_msg(f"Search error: {e}")
+
         elif text == "/dash":
             clear()
-            dashboard(
-                user=username,
-                model=state["model"],
-                memory_count=state.get("memory_count", 0),
-                mode=state["mode"],
-            )
+            dashboard(user=username, model=state["model"],
+                     memory_count=state.get("memory_count", 0), mode=state["mode"])
 
         elif text == "/clear":
             clear()
@@ -341,10 +328,8 @@ def chat_loop(state):
                 error_msg(f"Unknown mode: '{m}'")
 
         else:
-            # ── AI call ──────────────────────────────────
             sp = Spinner("Thinking", style=SPINNER_DOTS, color=MAGENTA)
             sp.start()
-
             try:
                 if state.get("auto"):
                     from providers.smart_router import auto_chat
@@ -356,9 +341,7 @@ def chat_loop(state):
             except Exception as e:
                 sp.stop(success=False, msg=f"Error: {str(e)[:60]}")
                 response = f"✖  Unexpected error: {str(e)}"
-
             ai_type(response, label="SolaraAI")
-
             try:
                 from core.memory import save_chat
                 save_chat(text, str(response))
@@ -383,10 +366,8 @@ def main():
     if len(sys.argv) == 3:
         run_autofixer(sys.argv[1], sys.argv[2])
         return
-
     boot_animation()
     dashboard(user="user", model=DEFAULT_PROVIDER, memory_count=0, mode="chat")
-
     state = {
         "user":         "user",
         "model":        DEFAULT_PROVIDER,
@@ -394,7 +375,6 @@ def main():
         "memory_count": 0,
         "auto":         False,
     }
-
     chat_loop(state)
 
 

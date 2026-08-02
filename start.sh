@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
-# ─────────────────────────────────────────────
-#  SolaraAI V2 — Launcher
-#  Works on Termux, Linux, macOS
-#  Just run:  bash start.sh
-# ─────────────────────────────────────────────
+# SolaraAI V2 — Launcher (non-interactive)
+# Works on Termux, Linux, macOS
+# Just run:  bash start.sh
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$DIR"
@@ -15,22 +13,11 @@ if [ -f "$DIR/.env" ]; then
     set +a
 fi
 
-# ── If key still missing, ask once and save it ──
+# ── Non-interactive: do NOT prompt for HF_API_KEY; just warn if missing
 if [ -z "$HF_API_KEY" ]; then
     echo ""
-    echo "  First-time setup — enter your HuggingFace API key."
-    echo "  Get a free key at: huggingface.co/settings/tokens"
-    echo ""
-    read -r -p "  HF_API_KEY: " INPUT_KEY
-    if [ -z "$INPUT_KEY" ]; then
-        echo ""
-        echo "  No key entered. Exiting."
-        exit 1
-    fi
-    echo "HF_API_KEY=$INPUT_KEY" > "$DIR/.env"
-    export HF_API_KEY="$INPUT_KEY"
-    echo ""
-    echo "  Key saved to .env — you won't be asked again."
+    echo "  [WARN] HF_API_KEY is not set — the system will prefer local transformers if available."
+    echo "         To use the Hugging Face Inference API set HF_API_KEY in .env or the environment."
     echo ""
 fi
 

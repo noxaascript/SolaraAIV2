@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SolaraAI</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>SolaraAI</h1>
+      <p class="tagline">Minimal web UI — powered by your local or HF models</p>
+    </header>
+
+    <section id="chat" class="chat-window">
+      <div id="messages" class="messages"></div>
+    </section>
+
+    <form id="inputForm" class="input-area" onsubmit="return sendMessage();">
+      <input id="messageInput" type="text" placeholder="Type your message..." autocomplete="off" />
+      <button type="submit">Send</button>
+    </form>
+
+    <footer class="footer">
+      <small>Local-first: install transformers + torch to run models locally. Or set HF_API_KEY for remote.</small>
+    </footer>
+  </main>
+
+<script>
+const messagesEl = document.getElementById('messages');
+const inputEl = document.getElementById('messageInput');
+
+function appendMessage(role, text) {
+  const div = document.createElement('div');
+  div.className = 'message ' + role;
+  div.textContent = text;
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+async function sendMessage(){
+  const text = inputEl.value.trim();
+  if(!text) return false;
+  appendMessage('user', text);
+  inputEl.value = '';
+  appendMessage('system', '...');
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text })
+    });
+
+    const data = await res.json();
+    // remove the last '...' system placeholder
+    const placeholders = document.querySelectorAll('.message.system');
+    if(placeholders.length) placeholders[placeholders.length-1].remove();
+
+    if(data.error){
+      appendMessage('ai', data.error);
+    } else if(data.message){
+      appendMessage('ai', data.message);
+      if(data.exit){
+        appendMessage('system', 'Session ended.');
+      }
+    } else {
+      appendMessage('ai', 'No response from server.');
+    }
+  } catch (err) {
+    // remove placeholder
+    const placeholders = document.querySelectorAll('.message.system');
+    if(placeholders.length) placeholders[placeholders.length-1].remove();
+    appendMessage('ai', 'Connection error: ' + err.message);
+  }
+
+  return false;
+}
+
+// allow Enter to send
+inputEl.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+// welcome
+appendMessage('ai', 'Welcome to SolaraAI web chat — type a message and press Send.');
+</script>
+</body>
+</html>

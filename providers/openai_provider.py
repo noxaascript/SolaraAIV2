@@ -1,29 +1,31 @@
-@@
--        if res.status_code == 401:
--            return "x  Invalid OPENAI_API_KEY. Get one: platform.openai.com/api-keys"
--        if res.status_code == 429:
--            return "x  OpenAI rate limit hit. Wait a moment and try again."
--        if res.status_code == 404:
--            return f"x  Model '{model}' not found. Check: platform.openai.com/docs/models"
--        if res.status_code != 200:
--            return f"x  OpenAI error {res.status_code}: {res.text[:200]}"
-+        from core.error_utils import format_error
-+        if res.status_code == 401:
-+            return format_error(401, "Invalid OPENAI_API_KEY. Get one: platform.openai.com/api-keys")
-+        if res.status_code == 429:
-+            return format_error(429, "OpenAI rate limit hit. Wait a moment and try again.")
-+        if res.status_code == 404:
-+            return format_error(404, f"Model '{model}' not found. Check: platform.openai.com/docs/models")
-+        if res.status_code != 200:
-+            return format_error(res.status_code, res.text[:200])
-@@
--    except requests.exceptions.Timeout:
--        return "x  Timed out (60s). Try /model to switch to a faster model."
--    except Exception as e:
--        return f"x  Connection failed: {str(e)[:200]}"
-+    except requests.exceptions.Timeout:
-+        from core.error_utils import format_error
-+        return format_error(504, "Timed out (60s). Try /model to switch to a faster model.")
-+    except Exception as e:
-+        from core.error_utils import format_error
-+        return format_error(502, f"Connection failed: {str(e)}")
+import os
+import requests
+
+from core.error_utils import format_error
+
+
+def ask_openai(prompt, model="gpt-4o-mini", api_key=None, timeout=60):
+    key = api_key or os.environ.get("OPENAI_API_KEY", "")
+    if not key:
+        return format_error(401, "OPENAI_API_KEY is not configured")
+    try:
+        response = requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+            json={"model": model, "messages": [{"role": "user", "content": str(prompt)}]},
+            timeout=timeout,
+        )
+        if response.status_code == 401:
+            return format_error(401, "Invalid OPENAI_API_KEY")
+        if response.status_code == 429:
+            return format_error(429, "OpenAI rate limit hit")
+        if response.status_code == 404:
+            return format_error(404, f"Model '{model}' not found")
+        if response.status_code != 200:
+            return format_error(response.status_code, response.text[:200])
+        choices = response.json().get("choices", [])
+        return str(choices[0]["message"]["content"]) if choices else format_error(502, "Empty model response")
+    except requests.exceptions.Timeout:
+        return format_error(504, "Request timed out")
+    except requests.exceptions.RequestException as exc:
+        return format_error(502, f"Connection failed: {exc}")

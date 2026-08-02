@@ -1,10 +1,33 @@
-@@
-     try:
-         response = ask_groq(text)
-         return response
+"""Single entry point for SolaraAI message routing.
 
-     except Exception as e:
--        return f"Router Error: {str(e)}"
-+        from core.error_utils import format_error
-+        # Use exit code 127 for unexpected command/execution errors where appropriate
-+        return format_error(500, f"Router Error: {str(e)}")
+Both the terminal and web clients use this module so command behavior stays
+consistent across interfaces.
+"""
+
+from core.error_utils import format_error
+from core.smart_router import detect_task
+from core.tools import run_tool
+from providers.groq import ask_groq
+
+
+def _extract_url(text):
+    return next((part for part in text.split() if part.startswith(("http://", "https://"))), None)
+
+
+def handle_input(text):
+    if text is None:
+        return format_error(400, "Message is required")
+    text = str(text).strip()
+    if not text:
+        return format_error(400, "Message cannot be empty")
+    if text.lower() in {"/exit", "exit", "quit"}:
+        return "__EXIT__"
+
+    task = detect_task(text)
+    url = _extract_url(text)
+    try:
+        if task == "browser" and url:
+            return run_tool("fetch_clean", url)
+        return ask_groq(text)
+    except Exception as exc:
+        return format_error(500, f"Router error: {exc}")

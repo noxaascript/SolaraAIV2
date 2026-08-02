@@ -22,14 +22,13 @@ def index():
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
     try:
-        data = request.get_json(force=True)
+        data = request.get_json(silent=True)
         if not data:
             return jsonify({"error": format_error(400, "Invalid JSON payload")}), 400
         message = data.get("message", "")
         if not isinstance(message, str) or message.strip() == "":
             return jsonify({"error": format_error(400, "Empty message")}), 400
 
-        # Route the message through the core router
         try:
             result = route(message)
         except Exception as e:
@@ -39,7 +38,11 @@ def api_chat():
         if result == "__EXIT__":
             return jsonify({"message": "Goodbye.", "exit": True})
 
-        return jsonify({"message": str(result)})
+        return jsonify({
+            "message": str(result),
+            "exit": False,
+            "command": message.startswith("/"),
+        })
 
     except Exception as e:
         return jsonify({"error": format_error(502, str(e))}), 502

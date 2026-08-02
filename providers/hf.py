@@ -1,37 +1,42 @@
-@@
--        if res.status_code == 503:
--            return "⏳  Model is warming up (~20 sec). Try again in a moment."
--        if res.status_code == 401:
--            return (
--                "✖  Invalid HF_API_KEY.\n"
--                "   Get a free key: huggingface.co/settings/tokens"
--            )
--        if res.status_code == 429:
--            return "✖  Rate limited. Wait a moment and try again."
--        if res.status_code != 200:
--            return f"✖  HF error {res.status_code}: {res.text[:200]}"
-+        from core.error_utils import format_error
-+
-+        if res.status_code == 503:
-+            return format_error(503, "Model is warming up (~20 sec). Try again in a moment.")
-+        if res.status_code == 401:
-+            return format_error(401, "Invalid HF_API_KEY. Get a free key: huggingface.co/settings/tokens")
-+        if res.status_code == 429:
-+            return format_error(429, "Rate limited. Wait a moment and try again.")
-+        if res.status_code != 200:
-+            # Return the HTTP status code with a snippet of the response
-+            return format_error(res.status_code, res.text[:200])
-@@
--    except requests.exceptions.Timeout:
--        return (
--            "✖  Timed out (60s).\n"
--            "   Try a faster model: /model  →  phi or mistral"
--        )
--    except Exception as e:
--        return f"✖  Connection failed: {str(e)[:200]}"
-+    except requests.exceptions.Timeout:
-+        from core.error_utils import format_error
-+        return format_error(504, "Timed out (60s). Try a faster model or run locally.")
-+    except Exception as e:
-+        from core.error_utils import format_error
-+        return format_error(502, f"Connection failed: {str(e)}")
+import os
+import requests
+
+from core.error_utils import format_error
+
+
+def ask_hf(prompt, model=None, api_key=None, timeout=60):
+    """Call the Hugging Face text-generation endpoint with safe responses."""
+    key = api_key or os.environ.get("HF_API_KEY", "")
+    if not key:
+        return format_error(401, "HF_API_KEY is not configured")
+    if not model:
+        return format_error(400, "A model is required")
+
+    try:
+        response = requests.post(
+            f"https://api-inference.huggingface.co/models/{model}",
+            headers={"Authorization": f"Bearer {key}"},
+            json={"inputs": str(prompt), "parameters": {"return_full_text": False}},
+            timeout=timeout,
+        )
+        if response.status_code == 503:
+            return format_error(503, "Model is warming up. Try again shortly.")
+        if response.status_code == 401:
+            return format_error(401, "Invalid HF_API_KEY")
+        if response.status_code == 429:
+            return format_error(429, "Rate limited. Wait a moment and try again.")
+        if response.status_code != 200:
+            return format_error(response.status_code, response.text[:200])
+
+        payload = response.json()
+        if isinstance(payload, list) and payload:
+            item = payload[0]
+            if isinstance(item, dict):
+                return str(item.get("generated_text", item))
+        if isinstance(payload, dict):
+            return str(payload.get("generated_text") or payload.get("text") or payload)
+        return str(payload)
+    except requests.exceptions.Timeout:
+        return format_error(504, "Request timed out. Try a faster model.")
+    except requests.exceptions.RequestException as exc:
+        return format_error(502, f"Connection failed: {exc}")

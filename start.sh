@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SolaraAI V2 — Launcher (non-interactive)
+# SolaraAI V2 — Launcher (non-interactive by default)
 # Works on Termux, Linux, macOS
 # Just run:  bash start.sh
 
@@ -13,7 +13,30 @@ if [ -f "$DIR/.env" ]; then
     set +a
 fi
 
-# ── Non-interactive: do NOT prompt for HF_API_KEY; just warn if missing
+# ── Optional interactive HF_API_KEY setup ──
+# If HF_API_KEY is missing and we're running in a TTY, ask the user once.
+if [ -z "$HF_API_KEY" ] && [ -t 0 ]; then
+    echo ""
+    echo "If you want run this ai, We reccomended to use HF API Key, YES/NO"
+    read -r -p "Configure HF_API_KEY now? [y/N]: " ANSWER
+    case "$ANSWER" in
+        [Yy]* )
+            read -r -p "Enter HF_API_KEY: " INPUT_KEY
+            if [ -n "$INPUT_KEY" ]; then
+                echo "HF_API_KEY=$INPUT_KEY" > "$DIR/.env"
+                export HF_API_KEY="$INPUT_KEY"
+                echo "HF_API_KEY saved to .env"
+            else
+                echo "No key entered — continuing without HF_API_KEY."
+            fi
+            ;;
+        * )
+            echo "Continuing without HF_API_KEY..."
+            ;;
+    esac
+fi
+
+# If still missing, show a non-fatal warning
 if [ -z "$HF_API_KEY" ]; then
     echo ""
     echo "  [WARN] HF_API_KEY is not set — the system will prefer local transformers if available."

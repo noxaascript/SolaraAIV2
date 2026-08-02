@@ -1,5 +1,5 @@
-from model_core.config import QWEN_MODEL
 from providers.hf import ask_hf
+from model_core.config import QWEN_MODEL
 
 
 def call_qwen(prompt, mode="chat"):

@@ -15,14 +15,31 @@ def chat_loop():
     print("SolaraAI Workspace Mode 🔥")
 
     while True:
-        user = input("you> ")
+        try:
+            user = input("you> ")
+        except (KeyboardInterrupt, EOFError):
+            print("\n[EXIT] Bye.")
+            break
 
-        if user == "/exit":
+        if user.strip().lower() in ("/exit", "exit", "quit"):
+            print("Shutting down...")
             break
 
         result = route(user)
 
-        print("solara> ", end="")
-        stream(result)
+        # handle router exit sentinel
+        if result == "__EXIT__":
+            print("solara> Goodbye.")
+            break
 
-        save_chat(user, str(result))
+        # ensure we print a string and avoid mixing prints during streaming
+        result_text = str(result) if result is not None else "No response."
+
+        print("solara> ", end="")
+        stream(result_text)
+
+        try:
+            save_chat(user, result_text)
+        except Exception:
+            # don't crash the chat loop if saving fails
+            pass

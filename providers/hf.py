@@ -93,7 +93,6 @@ def _ask_transformers(prompt, model="gpt2", max_new_tokens=256, temperature=0.7)
             max_new_tokens=max_new_tokens,
             do_sample=True,
             temperature=temperature,
-            eos_token_id=None,
         )
 
         if isinstance(outputs, list) and outputs:
@@ -107,21 +106,23 @@ def _ask_transformers(prompt, model="gpt2", max_new_tokens=256, temperature=0.7)
 def ask_hf(prompt, model="Qwen/Qwen2.5-7B-Instruct", api_key=None, max_new_tokens=512, temperature=0.7):
     """
     Unified HF access layer.
-    - If transformers is available and environment variable HF_USE_TRANSFORMERS=1 is set,
-      or if the model string starts with "local/" or "local:", try local transformers pipeline.
-    - Otherwise, fall back to HF Inference API via requests.
+    - Prefer local transformers-based inference if transformers is installed (no API key needed).
+    - If local transformers is not available, fall back to HF Inference API via requests (requires HF_API_KEY).
+    - You can force remote usage by setting HF_FORCE_REMOTE=1 in the environment.
     """
-    # Prefer local transformers when explicitly requested or when no API key is present
+    # Decide whether to use local transformers
+    force_remote = os.environ.get("HF_FORCE_REMOTE", "0").lower() in ("1", "true", "yes")
     use_local = False
-    if os.environ.get("HF_USE_TRANSFORMERS", "") in ("1", "true", "True"):
+
+    if (not force_remote) and _HAS_TRANSFORMERS:
         use_local = True
+
+    # explicit local model prefix (local/ or local:) always forces local
     if str(model).startswith("local/") or str(model).startswith("local:"):
-        # allow model names like local/gpt2 or local:./models/gpt2
-        # strip the prefix for transformers
         model = model.split("/", 1)[-1] if model.startswith("local/") else model.split(":", 1)[-1]
         use_local = True
 
-    if use_local and _HAS_TRANSFORMERS:
+    if use_local:
         return _ask_transformers(prompt, model=model, max_new_tokens=max_new_tokens, temperature=temperature)
 
     # If requests is missing, can't call HF API
@@ -131,9 +132,9 @@ def ask_hf(prompt, model="Qwen/Qwen2.5-7B-Instruct", api_key=None, max_new_token
     key = api_key or HF_API_KEY
     if not key:
         return (
-            "✖  HF_API_KEY is not set.\n"
-            "   To use the remote HF Inference API add to .env:  HF_API_KEY=hf_yourkey\n"
-            "   Or set HF_USE_TRANSFORMERS=1 and install transformers to run models locally."
+            "✖  HF_API_KEY is not set and local transformers isn't available.\n"
+            "   To run without an API key install transformers and torch, then retry.\n"
+            "   Example: pip install transformers torch"
         )
 
     url     = f"https://api-inference.huggingface.co/models/{model}"
@@ -178,7 +179,7 @@ def ask_hf(prompt, model="Qwen/Qwen2.5-7B-Instruct", api_key=None, max_new_token
     except requests.exceptions.Timeout:
         return (
             "✖  Timed out (60s).\n"
-            "   Try a faster model or run locally with transformers: set HF_USE_TRANSFORMERS=1"
+            "   Try a faster model or install transformers to run locally (no API key required)."
         )
     except Exception as e:
         return f"✖  Connection failed: {str(e)[:200]}"

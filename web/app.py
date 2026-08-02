@@ -6,17 +6,24 @@ from core.router import handle_input as route
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 
-# Simple CORS for development (adds Access-Control-Allow-Origin: *)
 @app.after_request
 def add_cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    allowed_origin = os.environ.get("WEB_ALLOWED_ORIGIN", "").strip()
+    if allowed_origin:
+        response.headers["Access-Control-Allow-Origin"] = allowed_origin
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     return response
 
 
 @app.route("/")
 def index():
     return render_template("index.html")
+
+
+@app.route("/healthz")
+def healthz():
+    return jsonify({"status": "ok", "service": "solaraai-web"})
 
 
 @app.route("/api/chat", methods=["POST"])
@@ -50,5 +57,5 @@ def api_chat():
 
 if __name__ == "__main__":
     port = int(os.environ.get("WEB_PORT", 5000))
-    debug = os.environ.get("WEB_DEBUG", "1") in ("1", "true", "yes")
-    app.run(host="0.0.0.0", port=port, debug=debug)
+    debug = os.environ.get("WEB_DEBUG", "0").lower() in ("1", "true", "yes")
+    app.run(host="0.0.0.0", port=port, debug=debug, use_reloader=False)

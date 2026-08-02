@@ -1,17 +1,19 @@
-# Minimal Web UI for SolaraAI
+# SolaraAI Web Workspace
 
-This folder contains a small Flask app that serves a clean, minimalist web chat UI.
+This folder contains the Flask web workspace for SolaraAI.
 
 Run locally:
 
-1. Install Flask (if not already):
-   pip install Flask
+1. Install the project dependencies:
+   `python -m pip install -r requirements.txt`
 
 2. Start the web server:
-   python web/app.py
+   `python -m web.app`
 
-3. Open http://localhost:5000 in your browser.
+3. Open `http://localhost:5000` in your browser.
 
 Notes:
 - The endpoint POST /api/chat forwards messages to the existing router (core/router.py).
-- The web UI prefers local models (transformers) if available; set HF_API_KEY in .env to use remote HF inference.
+- `GET /healthz` is available for health checks.
+- Set `WEB_ALLOWED_ORIGIN` only when a separate frontend needs browser CORS access.
+- Set `HF_API_KEY` in `.env` or the environment to use remote HF inference.

@@ -1,10 +1,20 @@
 #!/usr/bin/env bash
 # SolaraAI V2 — Launcher (non-interactive by default)
 # Works on Termux, Linux, macOS
-# Just run:  bash start.sh
+# Usage: bash start.sh [--setup-key]
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$DIR"
+
+# Parse args for optional setup flag
+SETUP_FLAG=0
+for arg in "$@"; do
+    case "$arg" in
+        --setup-key|-s)
+            SETUP_FLAG=1
+            ;;
+    esac
+done
 
 # ── Load .env file if it exists ──
 if [ -f "$DIR/.env" ]; then
@@ -14,11 +24,11 @@ if [ -f "$DIR/.env" ]; then
 fi
 
 # ── Optional interactive HF_API_KEY setup ──
-# If HF_API_KEY is missing and we're running in a TTY, ask the user once.
-if [ -z "$HF_API_KEY" ] && [ -t 0 ]; then
+# Prompt if --setup-key was provided, or if HF_API_KEY is missing and we have a TTY.
+if [ -z "$HF_API_KEY" ] && { [ "$SETUP_FLAG" -eq 1 ] || [ -t 0 ]; }; then
     echo ""
-    echo "If you want run this ai, We reccomended to use HF API Key, YES/NO"
-    read -r -p "Configure HF_API_KEY now? [y/N]: " ANSWER
+    echo "We recommend using a Hugging Face (HF) API key for best results."
+    read -r -p "Configure HF_API_KEY now? (y/N): " ANSWER
     case "$ANSWER" in
         [Yy]* )
             read -r -p "Enter HF_API_KEY: " INPUT_KEY

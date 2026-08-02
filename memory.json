@@ -14,6 +14,41 @@
       "timestamp": 1785650752.7448595,
       "prompt": "hai",
       "result": "\u2716  Connection failed: HTTPSConnectionPool(host='api-inference.huggingface.co', port=443): Max retries exceeded with url: /models/Qwen/Qwen2.5-7B-Instruct (Caused by NameResolutionError(\"HTTPSConnection(host='api-inference."
+    },
+    {
+      "timestamp": 1785711423.7025836,
+      "prompt": "1",
+      "result": "\u2716 [401] Unauthorized: HF_API_KEY is not configured"
+    },
+    {
+      "timestamp": 1785711433.6187346,
+      "prompt": "why",
+      "result": "\u2716 [401] Unauthorized: HF_API_KEY is not configured"
+    },
+    {
+      "timestamp": 1785711626.4371192,
+      "prompt": "hi",
+      "result": "\u2716 [401] Unauthorized: HF_API_KEY is not configured"
+    },
+    {
+      "timestamp": 1785711998.24698,
+      "prompt": "h",
+      "result": "\u2716 [401] Unauthorized: Hugging Face key is missing. Export HF_API_KEY in the same shell that starts SolaraAI, or add HF_API_KEY=hf_... to .env"
+    },
+    {
+      "timestamp": 1785712045.8169136,
+      "prompt": "hai",
+      "result": "\u2716 [400] Bad Request: {\"error\":\"Model not supported by provider hf-inference\"}"
+    },
+    {
+      "timestamp": 1785712326.7535322,
+      "prompt": "hi",
+      "result": "Hello! How can I assist you today?"
+    },
+    {
+      "timestamp": 1785712345.225166,
+      "prompt": "What model do you support? And who are you",
+      "result": "I am Qwen, a large language model created by Alibaba Cloud. I support various models depending on the specific capabilities and updates made to my architecture. As of my last update, I can assist with a wide range of tasks including but not limited to language translation, summarization, text generation, and answering questions across many topics. If you have any specific questions or need help with something, feel free to ask!"
     }
   ]
 }

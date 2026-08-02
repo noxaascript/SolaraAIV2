@@ -16,4 +16,6 @@ Notes:
 - The endpoint POST /api/chat forwards messages to the existing router (core/router.py).
 - `GET /healthz` is available for health checks.
 - Set `WEB_ALLOWED_ORIGIN` only when a separate frontend needs browser CORS access.
-- Set `HF_API_KEY` in `.env` or the environment to use remote HF inference.
+- Set `HF_API_KEY=hf_...` in `.env` or export it in the same shell that starts
+  the app. `HF_TOKEN` and `HUGGINGFACEHUB_API_TOKEN` are also supported.
+- Hugging Face keys must be active and have Inference Providers permission.

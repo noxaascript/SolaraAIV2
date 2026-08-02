@@ -1,6 +1,22 @@
 import os
 
-HF_API_KEY = os.environ.get("HF_API_KEY", "")
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+
+def get_hf_api_key():
+    """Read the Hugging Face key from supported environment names."""
+    for name in ("HF_API_KEY", "HF_TOKEN", "HUGGINGFACEHUB_API_TOKEN"):
+        value = os.environ.get(name, "").strip()
+        if value:
+            return value
+    return ""
+
+
+HF_API_KEY = get_hf_api_key()
 
 PROVIDERS = {
     "qwen": {
@@ -70,3 +86,9 @@ PROVIDERS = {
         "backend":  "hf",
     },
 }
+
+# Keep the CLI startup configuration in one place.  Older versions of main.py
+# import this name directly, so define it after the provider registry exists.
+DEFAULT_PROVIDER = os.environ.get("DEFAULT_PROVIDER", "qwen")
+if DEFAULT_PROVIDER not in PROVIDERS:
+    DEFAULT_PROVIDER = next(iter(PROVIDERS))

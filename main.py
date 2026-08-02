@@ -11,7 +11,13 @@ from ui.typing      import ai_type, user_echo, error_msg, success_msg, system_ms
 from ui.spinner     import Spinner, SPINNER_DOTS, SPINNER_ORBIT
 from ui.colors      import CYAN, MAGENTA, YELLOW, GREEN, GRAY, RED, WHITE, RESET, BOLD, DIM
 from providers.router import run_ai, list_providers
-from config import PROVIDERS, DEFAULT_PROVIDER
+from config import PROVIDERS
+
+# Keep startup compatible with older config.py files that only define
+# PROVIDERS. An invalid configured provider falls back to the first available.
+DEFAULT_PROVIDER = os.environ.get("DEFAULT_PROVIDER", "qwen")
+if DEFAULT_PROVIDER not in PROVIDERS:
+    DEFAULT_PROVIDER = next(iter(PROVIDERS), "qwen")
 
 
 # ──────────────────────────────────────────────

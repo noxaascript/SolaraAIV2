@@ -19,7 +19,16 @@ done
 # ── Load .env file if it exists ──
 if [ -f "$DIR/.env" ]; then
     set -a
-    source "$DIR/.env"
+    # Only load simple KEY=value lines; do not execute arbitrary .env content.
+    while IFS='=' read -r KEY VALUE; do
+        case "$KEY" in
+            HF_API_KEY|HF_TOKEN|HUGGINGFACEHUB_API_TOKEN)
+                VALUE="${VALUE%\"}"
+                VALUE="${VALUE#\"}"
+                export "$KEY=$VALUE"
+                ;;
+        esac
+    done < "$DIR/.env"
     set +a
 fi
 

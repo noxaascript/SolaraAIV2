@@ -39,7 +39,7 @@ def cmd_ping():
     import socket
     from config import HF_API_KEY
     print(f"\n  {BOLD}{CYAN}◈  CONNECTION CHECK{RESET}")
-    print(f"  {GRAY}{'─' * 44}{RESET}\n")
+    print(f"  {GRAY}{'─' * 52}{RESET}\n")
     checks = []
     sp = Spinner("Internet (DNS)", style=SPINNER_ORBIT, color=CYAN)
     sp.start()
@@ -95,7 +95,7 @@ def cmd_ping():
         except Exception as e:
             sp.stop(success=False, msg=f"API key       ✖  {str(e)[:50]}")
             checks.append(False)
-    print(f"\n  {GRAY}{'─' * 44}{RESET}")
+    print(f"\n  {GRAY}{'─' * 52}{RESET}")
     if all(checks):
         print(f"  {BOLD}{GREEN}✔  All systems go — ready to chat!{RESET}\n")
     else:
@@ -109,7 +109,7 @@ def cmd_ping():
 
 def cmd_fix():
     print(f"\n  {BOLD}{CYAN}◈  AUTO-FIX{RESET}")
-    print(f"  {GRAY}{'─' * 44}{RESET}\n")
+    print(f"  {GRAY}{'─' * 52}{RESET}\n")
     in_termux = (
         os.path.isdir("/data/data/com.termux")
         or "com.termux" in os.environ.get("PREFIX", "")
@@ -147,7 +147,7 @@ def cmd_fix():
 
 def cmd_update():
     print(f"\n  {BOLD}{CYAN}◈  UPDATE SOLARAAI{RESET}")
-    print(f"  {GRAY}{'─' * 44}{RESET}\n")
+    print(f"  {GRAY}{'─' * 52}{RESET}\n")
     print(f"  {GRAY}Pulling latest from GitHub...{RESET}")
     ret = os.system("git pull 2>&1")
     print()

@@ -1,9 +1,7 @@
-from core.router import route
-from core.memory import save_chat, init_db
+from core.router import handle_input as route
+from core.memory import save_chat
 
 import time
-
-init_db()
 
 
 def stream(text):

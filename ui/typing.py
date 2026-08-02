@@ -15,25 +15,39 @@ def type_text(text, speed=0.018, newline=True):
     sys.stdout.flush()
 
 
-def ai_type(text, label="Solara"):
-    print(f"\n  {label} :")
-    print(f"  {'-' * 50}")
-    print(f"  {str(text).strip()}")
-    print(f"  {'-' * 50}")
+def ai_type(text, label="SolaraAI"):
+    from ui.colors import CYAN, RESET, BOLD
+    print(f"\n  {BOLD}{CYAN}╭── {label} ──────────────────────────────────────────────────{RESET}")
+    print(f"  {BOLD}{CYAN}│{RESET}")
+    
+    lines = str(text).strip().splitlines()
+    for line in lines:
+        sys.stdout.write(f"  {BOLD}{CYAN}│{RESET}  ")
+        for char in line:
+            sys.stdout.write(char)
+            sys.stdout.flush()
+            time.sleep(0.003)
+        print()
+        
+    print(f"  {BOLD}{CYAN}│{RESET}")
+    print(f"  {BOLD}{CYAN}╰─────────────────────────────────────────────────────────────{RESET}\n")
 
 
 def user_echo(text, username="You"):
-    print(f"\n  {username} > {text}")
-    print(f"  {'-' * 50}")
+    from ui.colors import GREEN, RESET, BOLD
+    print(f"\n  {BOLD}{GREEN}❯ {username}:{RESET} {text}")
 
 
 def system_msg(text):
-    print(f"\n  [system] {text}")
+    from ui.colors import YELLOW, RESET, BOLD
+    print(f"\n  {BOLD}{YELLOW}⚡ [system]{RESET} {text}")
 
 
 def error_msg(text):
-    print(f"\n  [error]  {text}")
+    from ui.colors import RED, RESET, BOLD
+    print(f"\n  {BOLD}{RED}✖ [error]{RESET}  {text}")
 
 
 def success_msg(text):
-    print(f"\n  [ok]     {text}")
+    from ui.colors import GREEN, RESET, BOLD
+    print(f"\n  {BOLD}{GREEN}✔ [success]{RESET} {text}")

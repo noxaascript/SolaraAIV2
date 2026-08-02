@@ -1,0 +1,19 @@
+{
+  "user": [
+    {
+      "timestamp": 1785640828.51029,
+      "prompt": "hai",
+      "result": "\u2716  Connection failed: HTTPSConnectionPool(host='api-inference.huggingface.co', port=443): Max retries exceeded with url: /models/Qwen/Qwen2.5-7B-Instruct (Caused by NameResolutionError(\"HTTPSConnection(host='api-inference."
+    },
+    {
+      "timestamp": 1785640857.0316095,
+      "prompt": "hai",
+      "result": "\u2716  Connection failed: HTTPSConnectionPool(host='api-inference.huggingface.co', port=443): Max retries exceeded with url: /models/microsoft/phi-4 (Caused by NameResolutionError(\"HTTPSConnection(host='api-inference.huggingfa"
+    },
+    {
+      "timestamp": 1785650752.7448595,
+      "prompt": "hai",
+      "result": "\u2716  Connection failed: HTTPSConnectionPool(host='api-inference.huggingface.co', port=443): Max retries exceeded with url: /models/Qwen/Qwen2.5-7B-Instruct (Caused by NameResolutionError(\"HTTPSConnection(host='api-inference."
+    }
+  ]
+}

@@ -93,7 +93,7 @@ def help_menu():
         ]),
     ]
 
-    W = 44
+    W = 52
     print(f"\n  {BOLD}{CYAN}◈  SOLARAAI COMMANDS{RESET}")
     print(f"  {GRAY}{'═' * W}{RESET}")
 
@@ -127,4 +127,4 @@ def model_switched(old, new):
 def section_banner(title, icon="◈", color=None):
     c = color or CYAN
     print(f"\n  {BOLD}{c}{icon}  {title}{RESET}")
-    print(f"  {DIM}{GRAY}{'─' * 44}{RESET}\n")
+    print(f"  {DIM}{GRAY}{'─' * 52}{RESET}\n")

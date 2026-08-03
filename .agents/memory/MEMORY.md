@@ -1,1 +1,0 @@
-- [Python runtime setup](python-runtime-setup.md) — Flask workflows require the full Python tools runtime and declared dependencies.

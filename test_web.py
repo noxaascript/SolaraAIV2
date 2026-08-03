@@ -23,6 +23,14 @@ class TestWebAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.get_json()["exit"])
 
+    def test_identity_question(self):
+        response = self.client.post("/api/chat", json={"message": "Who are you?"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.get_json()["message"],
+            "I'm SolaraAI, made by KareemXD. I'm using models like Qwen and others.",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

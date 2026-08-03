@@ -1,0 +1,21 @@
+stylist_ai_web/
+├── backend/
+│   ├── api/
+│   ├── models/
+│   ├── routes/
+│   ├── utils/
+│   ├── app.py
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   ├── package.json
+│   ├── index.html
+├── ml_models/
+│   ├── train.py
+│   ├── model.pkl
+├── tests/
+│   ├── unit_tests.py
+│   ├── integration_tests.py
+├── .gitignore
+├── README.md
+└── requirements.txt

@@ -334,6 +334,11 @@ def chat_loop(state):
                 error_msg(f"Unknown mode: '{m}'")
 
         else:
+            from core.identity import IDENTITY_RESPONSE, is_identity_question
+            if is_identity_question(text):
+                ai_type(IDENTITY_RESPONSE, label="SolaraAI")
+                continue
+
             sp = Spinner("Thinking", style=SPINNER_DOTS, color=MAGENTA)
             sp.start()
             try:
@@ -344,6 +349,8 @@ def chat_loop(state):
                 else:
                     response = run_ai(state["model"], text)
                     sp.stop(success=True, msg="Done")
+                from core.code_output import save_generated_code
+                response = save_generated_code(text, response)
             except Exception as e:
                 sp.stop(success=False, msg=f"Error: {str(e)[:60]}")
                 response = f"✖  Unexpected error: {str(e)}"

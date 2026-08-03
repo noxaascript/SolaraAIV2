@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "/home/runner/workspace/web/app.py", line 4, in <module>
-    from core.error_utils import format_error
-ModuleNotFoundError: No module named 'core'

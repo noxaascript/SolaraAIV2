@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="SolaraAI local-first AI workspace">
+  <title>SolaraAI — Workspace</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="shell">
+    <aside class="sidebar">
+       <div class="brand"><span class="brand-mark">✦</span><span>SolaraAI</span><span class="version">V2</span></div>
+       <div id="authPanel" class="auth-panel"></div>
+      <button id="newChat" class="new-chat">＋ New conversation <kbd>⌘ K</kbd></button>
+      <div class="side-label">Workspace</div>
+      <button class="nav-item active" data-mode="chat">◌ <span>Chat</span></button>
+      <button class="nav-item" data-mode="dev">⌘ <span>Developer</span></button>
+      <button class="nav-item" data-mode="browser">◎ <span>Browser</span></button>
+      <div class="side-label">Recent</div>
+      <div id="recent" class="recent"></div>
+       <div class="sidebar-bottom"><div class="status-dot"></div><span>Local runtime ready</span></div>
+       <div class="key-actions"><button id="connectHf" class="new-chat">Connect HF key</button><button id="clearHf" class="icon-button">Clear HF key</button></div>
+    </aside>
+    <section class="workspace terminal-shell">
+      <header class="topbar">
+        <div><div class="terminal-path"><span class="terminal-dot"></span>solaraai@workspace:~</div><h1 id="modeTitle">Terminal chat</h1></div>
+        <div class="controls"><label>MODEL <select id="model"><option value="qwen">Qwen 2.5 7B · HF</option><option value="qwen_72b">Qwen 2.5 Coder 32B · HF</option><option value="kimi_26">Kimi K2.6 · HF</option><option value="kimi_25">Kimi K2.5 · HF</option><option value="llama">Llama 3.3 70B · HF</option><option value="mistral">Mistral 7B · HF</option><option value="deepseek">DeepSeek R1 32B · HF</option></select></label><button id="clearChat" class="icon-button" title="Clear conversation">clear</button></div>
+      </header>
+      <section id="messages" class="messages" aria-live="polite"></section>
+      <section class="composer-wrap">
+        <div class="suggestions"><button data-prompt="Explain how SolaraAI routing works">Explain routing</button><button data-prompt="Help me debug a Python error">Debug code</button><button data-prompt="/help">Show commands</button></div>
+        <form id="inputForm" class="composer">
+          <textarea id="messageInput" rows="1" placeholder="Ask SolaraAI anything…"></textarea>
+          <div class="composer-footer"><span><kbd>Enter</kbd> send · <kbd>Shift Enter</kbd> new line</span><button id="sendButton" type="submit" aria-label="Send message">↑</button></div>
+        </form>
+        <p class="fine-print">SolaraAI can make mistakes. Check important information.</p>
+      </section>
+    </section>
+  </main>
+<script>
+const messages = document.getElementById('messages'), input = document.getElementById('messageInput'), form = document.getElementById('inputForm'), send = document.getElementById('sendButton'), recent = document.getElementById('recent');
+let busy = false, conversation = [];
+const saved = JSON.parse(localStorage.getItem('solara-conversation') || '[]');
+async function loadAuth(){
+  const response = await fetch('/api/me');
+  const data = await response.json();
+  const panel = document.getElementById('authPanel');
+  if(data.authenticated){
+    panel.innerHTML = `<div class="auth-user"><span class="auth-dot"></span><span>${data.user.name || data.user.email}</span><a href="/auth/logout">Sign out</a></div>`;
+  } else {
+    panel.innerHTML = '<a class="google-login" href="/auth/login"><span>G</span> Sign in with Google</a>';
+  }
+}
+function scrollDown(){ messages.scrollTop = messages.scrollHeight; }
+function addMessage(role, text, pending=false){
+  const article = document.createElement('article'); article.className = `message ${role}` + (pending ? ' pending' : '');
+  article.innerHTML = `<div class="avatar">${role === 'user' ? 'YOU' : role === 'system' ? '!' : '✦'}</div><div class="message-body"><div class="message-meta">${role === 'user' ? 'You' : role === 'system' ? 'System' : 'SolaraAI'} <span>${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div><div class="message-text"></div></div>`;
+   const textNode = article.querySelector('.message-text');
+   textNode.textContent = text;
+   if (pending) textNode.setAttribute('aria-live', 'polite');
+   messages.appendChild(article); scrollDown(); return article;
+}
+function persist(){ localStorage.setItem('solara-conversation', JSON.stringify(conversation.slice(-30))); }
+function render(){
+  messages.innerHTML = '';
+  if(!conversation.length){ addMessage('assistant', 'Welcome back. What would you like to work on?'); return; }
+  conversation.forEach(item => addMessage(item.role === 'user' ? 'user' : 'assistant', item.text));
+}
+function setMode(mode){
+  document.querySelectorAll('.nav-item').forEach(button => button.classList.toggle('active', button.dataset.mode === mode));
+  document.getElementById('modeTitle').textContent = mode[0].toUpperCase() + mode.slice(1);
+  input.placeholder = mode === 'dev' ? 'Describe a bug, feature, or code change…' : mode === 'browser' ? 'Paste a URL or ask me to research…' : 'Ask SolaraAI anything…';
+}
+async function sendMessage(event){
+  event?.preventDefault(); if(busy) return false;
+  const text = input.value.trim(); if(!text) return false;
+   if(text.toLowerCase() === '/sethfkeyauto'){
+     const key = await requestHfKey();
+     if(key) await saveHfKey(key);
+     input.value = '';
+     return false;
+   }
+  busy = true; send.disabled = true; input.value = ''; input.style.height = 'auto';
+  conversation.push({role:'user', text}); addMessage('user', text);
+  const pending = addMessage('assistant', 'Thinking…', true);
+  try{
+   const modelSelect = document.getElementById('model');
+   const response = await fetch('/api/chat', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message:text, provider:modelSelect.value})});
+    const data = await response.json();
+    pending.remove(); const answer = data.error || data.message || 'No response from server.';
+    conversation.push({role:'assistant', text:answer});
+    const answerArticle = addMessage(data.error ? 'system' : 'assistant', answer);
+    if(data.generated_file){
+      const link = document.createElement('a');
+      link.href = data.generated_file.url;
+      link.download = data.generated_file.name;
+      link.className = 'file-download';
+      link.textContent = `Download ${data.generated_file.name}`;
+      answerArticle.querySelector('.message-text').appendChild(document.createElement('br'));
+      answerArticle.querySelector('.message-text').appendChild(link);
+    }
+    recent.innerHTML = `<div class="recent-item">${text.slice(0, 34)}${text.length > 34 ? '…' : ''}</div>` + recent.innerHTML;
+    persist();
+  }catch(error){ pending.remove(); addMessage('system', `Connection error: ${error.message}`); }
+  finally{ busy = false; send.disabled = false; input.focus(); }
+  return false;
+}
+document.getElementById('newChat').onclick = () => { conversation = []; persist(); render(); input.focus(); };
+document.getElementById('clearChat').onclick = () => { conversation = []; persist(); render(); };
+async function requestHfKey(){
+  return new Promise(resolve => {
+    const value = document.createElement('input');
+    value.type = 'password'; value.placeholder = 'hf_…'; value.autocomplete = 'off';
+    const dialog = document.createElement('dialog');
+    dialog.innerHTML = '<form method="dialog"><h3>Connect Hugging Face</h3><p>Your key stays in this browser session.</p><div class="key-dialog-input"></div><div><button value="cancel">Cancel</button><button value="save">Connect</button></div></form>';
+    dialog.querySelector('.key-dialog-input').appendChild(value);
+    document.body.appendChild(dialog);
+    dialog.addEventListener('close', () => { const key = dialog.returnValue === 'save' ? value.value.trim() : ''; dialog.remove(); resolve(key); }, {once:true});
+    dialog.showModal(); value.focus();
+  });
+}
+async function saveHfKey(key){
+  const response = await fetch('/api/hf-key', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({key})});
+  const data = await response.json();
+  addMessage(data.ok ? 'assistant' : 'system', data.ok ? data.message : (data.error || 'Could not connect key.'));
+}
+document.getElementById('connectHf').onclick = async () => {
+  const key = await requestHfKey();
+  if(key) await saveHfKey(key);
+};
+document.getElementById('clearHf').onclick = async () => {
+  const response = await fetch('/api/hf-key', {method:'DELETE'});
+  const data = await response.json();
+  addMessage('assistant', data.message || 'HF key cleared.');
+};
+document.querySelectorAll('.nav-item').forEach(button => button.onclick = () => setMode(button.dataset.mode));
+document.querySelectorAll('[data-prompt]').forEach(button => button.onclick = () => { input.value = button.dataset.prompt; input.focus(); });
+input.addEventListener('input', () => { input.style.height='auto'; input.style.height=Math.min(input.scrollHeight, 180)+'px'; });
+input.addEventListener('keydown', e => { if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(e); } });
+form.addEventListener('submit', sendMessage);
+   conversation = saved; render(); input.focus();
+loadAuth();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+requests
+python-dotenv
+python-dotenv
+beautifulsoup4
+flask
+beautifulsoup4
+flask
+python-dotenv
+requests

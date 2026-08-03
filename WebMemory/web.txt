@@ -1,0 +1,2 @@
+mkdir -p WebMemory
+touch WebMemory/web.txt
